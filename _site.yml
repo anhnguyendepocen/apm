@@ -1,0 +1,9 @@
+name: "apm"
+output_dir: "."
+navbar:
+  title: "Applied Predictive Modeling (2013)"
+  left:
+    - text: "Notes"
+      href: index.html
+    - text: "Chapter 1"
+      href: ch01.html
