@@ -1,28 +1,159 @@
 ---
-title: "Applied Predictive Modeling (2013)"
+title: "Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn -- Notes"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Introduction
+
+### Chapter 1
+
+Data characteristics to evaluate
+
+* Response
+    * categorical vs. continuous
+    * balanced/symmetric
+    * unbalanced/skewed
+    * independent
+* Predictors
+    * continuous
+    * count
+    * categorical
+    * correlated/associated
+    * different scales
+    * missing values
+    * sparse
+    
+## General Strategies
+    
+### Chapter 2
+
+n/a
+
+### Chapter 3
+
+* __Centering__: subtract average value so that predictors have 0 mean
+* __Scaling__: divide by standard deviation so predictors all have sd of 1
+
+For __skewness__, general rule of thumb is if ratio of highest value to lowest value is greater than 20, there is significant skewness. If using the skewness statistic, a symmetric distribution will have a skewness value close to 0, right skewed distributions have a positive statistic and left skewed distributions have a negative statistic.
+
+Transforming data with log, square root, or inverse could remove skewness. 
+
+```{r}
+library(AppliedPredictiveModeling)
+library(e1071)
+data("segmentationOriginal")
+apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))
+# can't match the 2.39 from book
 ```
 
-## R Markdown
+__Box-Cox Transformation__
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This can be applied independently to each predictor that contains values > 0.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+$$x^{*} = \left\{\begin{matrix}
+(x^{\lambda-1})/\lambda, &  \lambda \neq 0 \\ 
+log(x), & \lambda = 0 \end{matrix}\right.$$
 
-```{r cars}
-summary(cars)
-```
+__Outliers__
 
-## Including Plots
+* Some methods like tree-based and SVM are not sensitive to outliers.
+* Spatial sign transformation projects predictors onto a multidimensional sphere (making all samples the same distance from the center). Need to center and scale data first, and has to be applied on entire group of predictors.
 
-You can also embed plots, for example:
+__PCA__
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+* principal components are uncorrelated
+* scree plot shows total variance explained by # of components
+* scale of components tend to get smaller bc they account for less and less of the variation
+* PCA can be used to look at loadings by "channels".
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+__Missing Values__
+
+* understand why data is missing first
+* is pattern of missing data related to outcome?
+* censored data is not missing data since something is known about its value
+* can impute missing values with K nearest neighbors
+
+__Removing Variables__
+
+* rule of thumb for near-zero variance predictors
+    * franction of unique values over sample size is low (<10%)
+    * ratio of most frequent to second most frequent value is large (>20)
+* variance inflation factor (VIF) can be used to identify collinearity
+    * limited to linear regression and requires more samples than predictors
+* could remove min # of predictors so that pairwise correlations are below some threshold (e.g. 0.75)
+
+RETURN TO PAGE 48
+
+### Chapter 4
+
+
+
+## Regression Models
+
+### Chapter 5
+
+
+
+### Chapter 6
+
+
+
+### Chapter 7
+
+
+
+### Chapter 8
+
+
+
+### Chapter 9
+
+
+
+### Chapter 10
+
+
+
+## Classification Models
+
+### Chapter 11
+
+
+
+### Chapter 12
+
+
+
+### Chapter 13
+
+
+
+### Chapter 14
+
+
+
+### Chapter 15
+
+
+
+### Chapter 16
+
+
+
+### Chapter 17
+
+
+
+## Other Considerations
+
+### Chapter 18
+
+
+
+### Chapter 19
+
+
+
+### Chapter 20
+
+

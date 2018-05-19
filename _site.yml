@@ -1,9 +1,16 @@
 name: "apm"
 output_dir: "."
+output:
+  html_document:
+    theme: yeti
+    highlight: textmate
+    toc: true
+    toc_depth: 3
+    toc_float: true
 navbar:
   title: "Applied Predictive Modeling (2013)"
   left:
     - text: "Notes"
       href: index.html
-    - text: "Chapter 1"
-      href: ch01.html
+    - text: "Solutions"
+      href: solutions.html

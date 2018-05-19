@@ -11,16 +11,19 @@
 
 
 
-<title>Applied Predictive Modeling (2013)</title>
+<title>Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Notes</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -99,34 +102,34 @@ button.code-folding-btn:focus {
 <style type="text/css">
 /* padding for bootstrap navbar */
 body {
-  padding-top: 51px;
+  padding-top: 45px;
   padding-bottom: 40px;
 }
 /* offset scroll position for anchor links (for fixed navbar)  */
 .section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 
 .section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 .section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 .section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 .section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 .section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 50px;
+  margin-top: -50px;
 }
 </style>
 
@@ -163,6 +166,101 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -181,7 +279,7 @@ $(document).ready(function () {
   <a href="index.html">Notes</a>
 </li>
 <li>
-  <a href="ch01.html">Chapter 1</a>
+  <a href="solutions.html">Solutions</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -195,33 +293,277 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Applied Predictive Modeling (2013)</h1>
+<h1 class="title toc-ignore">Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Notes</h1>
 
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<div id="chapter-1" class="section level3">
+<h3>Chapter 1</h3>
+<p>Data characteristics to evaluate</p>
+<ul>
+<li>Response
+<ul>
+<li>categorical vs. continuous</li>
+<li>balanced/symmetric</li>
+<li>unbalanced/skewed</li>
+<li>independent</li>
+</ul></li>
+<li>Predictors
+<ul>
+<li>continuous</li>
+<li>count</li>
+<li>categorical</li>
+<li>correlated/associated</li>
+<li>different scales</li>
+<li>missing values</li>
+<li>sparse</li>
+</ul></li>
+</ul>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="index_files/figure-html/pressure-1.png" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+<div id="general-strategies" class="section level2">
+<h2>General Strategies</h2>
+<div id="chapter-2" class="section level3">
+<h3>Chapter 2</h3>
+<p>n/a</p>
+</div>
+<div id="chapter-3" class="section level3">
+<h3>Chapter 3</h3>
+<ul>
+<li><strong>Centering</strong>: subtract average value so that predictors have 0 mean</li>
+<li><strong>Scaling</strong>: divide by standard deviation so predictors all have sd of 1</li>
+</ul>
+<p>For <strong>skewness</strong>, general rule of thumb is if ratio of highest value to lowest value is greater than 20, there is significant skewness. If using the skewness statistic, a symmetric distribution will have a skewness value close to 0, right skewed distributions have a positive statistic and left skewed distributions have a negative statistic.</p>
+<p>Transforming data with log, square root, or inverse could remove skewness.</p>
+<pre class="r"><code>library(AppliedPredictiveModeling)
+library(e1071)
+data(&quot;segmentationOriginal&quot;)
+apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))</code></pre>
+<pre><code>##                      AngleCh1                AngleStatusCh1 
+##                   -0.01854876                    0.92866706 
+##                       AreaCh1                 AreaStatusCh1 
+##                    3.36801803                    3.08804420 
+##                   AvgIntenCh1                   AvgIntenCh2 
+##                    3.19351951                    0.97769142 
+##                   AvgIntenCh3                   AvgIntenCh4 
+##                    2.71682974                    1.82474941 
+##             AvgIntenStatusCh1             AvgIntenStatusCh2 
+##                    1.52937848                    0.90590558 
+##             AvgIntenStatusCh3             AvgIntenStatusCh4 
+##                    3.01276804                    2.22077336 
+##        ConvexHullAreaRatioCh1  ConvexHullAreaRatioStatusCh1 
+##                    2.46192050                    3.08907143 
+##       ConvexHullPerimRatioCh1 ConvexHullPerimRatioStatusCh1 
+##                   -1.31387868                    1.56909379 
+##           DiffIntenDensityCh1           DiffIntenDensityCh3 
+##                    2.66778149                    2.06717124 
+##           DiffIntenDensityCh4     DiffIntenDensityStatusCh1 
+##                    1.81997087                    1.86864549 
+##     DiffIntenDensityStatusCh3     DiffIntenDensityStatusCh4 
+##                    1.44537894                    1.57377555 
+##               EntropyIntenCh1               EntropyIntenCh3 
+##                    0.36556307                   -0.99902221 
+##               EntropyIntenCh4         EntropyIntenStatusCh1 
+##                   -0.83210097                    0.73125237 
+##         EntropyIntenStatusCh3         EntropyIntenStatusCh4 
+##                    0.84143095                    1.10278084 
+##                 EqCircDiamCh1           EqCircDiamStatusCh1 
+##                    1.97636715                    2.48969012 
+##               EqEllipseLWRCh1         EqEllipseLWRStatusCh1 
+##                    2.56912800                    2.50553220 
+##         EqEllipseOblateVolCh1   EqEllipseOblateVolStatusCh1 
+##                    5.42783500                    3.53030626 
+##        EqEllipseProlateVolCh1  EqEllipseProlateVolStatusCh1 
+##                    5.39469639                    3.96579965 
+##               EqSphereAreaCh1         EqSphereAreaStatusCh1 
+##                    3.36785942                    3.08804420 
+##                EqSphereVolCh1          EqSphereVolStatusCh1 
+##                    5.30096883                    3.82036812 
+##                FiberAlign2Ch3                FiberAlign2Ch4 
+##                   -0.06488576                   -0.11586651 
+##          FiberAlign2StatusCh3          FiberAlign2StatusCh4 
+##                    1.03404665                    0.74635872 
+##                FiberLengthCh1          FiberLengthStatusCh1 
+##                    2.29339150                    2.84791906 
+##                 FiberWidthCh1           FiberWidthStatusCh1 
+##                    0.98076311                    1.46060755 
+##               IntenCoocASMCh3               IntenCoocASMCh4 
+##                    2.53956418                    2.67278483 
+##         IntenCoocASMStatusCh3         IntenCoocASMStatusCh4 
+##                    1.64477492                    2.22816175 
+##          IntenCoocContrastCh3          IntenCoocContrastCh4 
+##                    1.56752226                    3.32735052 
+##    IntenCoocContrastStatusCh3    IntenCoocContrastStatusCh4 
+##                    0.83098552                    1.42257680 
+##           IntenCoocEntropyCh3           IntenCoocEntropyCh4 
+##                   -1.13827522                   -1.19337825 
+##     IntenCoocEntropyStatusCh3     IntenCoocEntropyStatusCh4 
+##                    0.76114076                    1.11481584 
+##               IntenCoocMaxCh3               IntenCoocMaxCh4 
+##                    1.04201928                    1.09933017 
+##         IntenCoocMaxStatusCh3         IntenCoocMaxStatusCh4 
+##                    0.53392407                    0.98707434 
+##                  KurtIntenCh1                  KurtIntenCh3 
+##                   13.11712681                    6.00500092 
+##                  KurtIntenCh4            KurtIntenStatusCh1 
+##                    7.47530964                    4.46755725 
+##            KurtIntenStatusCh3            KurtIntenStatusCh4 
+##                    2.76835107                    2.99250610 
+##                     LengthCh1               LengthStatusCh1 
+##                    1.93593291                    2.41307106 
+##    MemberAvgAvgIntenStatusCh2  MemberAvgTotalIntenStatusCh2 
+##                           NaN                           NaN 
+##            NeighborAvgDistCh1      NeighborAvgDistStatusCh1 
+##                    0.42296159                    0.83229336 
+##            NeighborMinDistCh1      NeighborMinDistStatusCh1 
+##                    2.28546514                    2.08842063 
+##            NeighborVarDistCh1      NeighborVarDistStatusCh1 
+##                   -0.09980093                    1.00866919 
+##                      PerimCh1                PerimStatusCh1 
+##                    2.54570913                    3.08657269 
+##                   ShapeBFRCh1             ShapeBFRStatusCh1 
+##                   -0.43174883                    1.26303512 
+##                   ShapeLWRCh1             ShapeLWRStatusCh1 
+##                    2.36346271                    2.51184770 
+##                   ShapeP2ACh1             ShapeP2AStatusCh1 
+##                    2.14478059                    3.24257621 
+##                  SkewIntenCh1                  SkewIntenCh3 
+##                    1.54284419                    2.10087174 
+##                  SkewIntenCh4            SkewIntenStatusCh1 
+##                    2.49549339                    1.48739146 
+##            SkewIntenStatusCh3            SkewIntenStatusCh4 
+##                    1.50183305                    1.73391489 
+##             SpotFiberCountCh3             SpotFiberCountCh4 
+##                    1.66684453                    2.94584637 
+##       SpotFiberCountStatusCh3       SpotFiberCountStatusCh4 
+##                    1.19082265                    2.88477288 
+##                 TotalIntenCh1                 TotalIntenCh2 
+##                    5.19752078                    1.62221195 
+##                 TotalIntenCh3                 TotalIntenCh4 
+##                    2.75802704                    2.73437011 
+##           TotalIntenStatusCh1           TotalIntenStatusCh2 
+##                    1.57356002                    0.85577998 
+##           TotalIntenStatusCh3           TotalIntenStatusCh4 
+##                    3.46545082                    1.31924568 
+##                   VarIntenCh1                   VarIntenCh3 
+##                    2.64697010                    2.32709388 
+##                   VarIntenCh4             VarIntenStatusCh1 
+##                    2.17836235                    1.49811262 
+##             VarIntenStatusCh3             VarIntenStatusCh4 
+##                    1.50644634                    1.43517151 
+##                      WidthCh1                WidthStatusCh1 
+##                    1.82291886                    2.07181522 
+##                     XCentroid                     YCentroid 
+##                   -0.05216151                    0.48625392</code></pre>
+<pre class="r"><code># can&#39;t match the 2.39 from book</code></pre>
+<p><strong>Box-Cox Transformation</strong></p>
+<p>This can be applied independently to each predictor that contains values &gt; 0.</p>
+<p><span class="math display">\[x^{*} = \left\{\begin{matrix}
+(x^{\lambda-1})/\lambda, &amp;  \lambda \neq 0 \\ 
+log(x), &amp; \lambda = 0 \end{matrix}\right.\]</span></p>
+<p><strong>Outliers</strong></p>
+<ul>
+<li>Some methods like tree-based and SVM are not sensitive to outliers.</li>
+<li>Spatial sign transformation projects predictors onto a multidimensional sphere (making all samples the same distance from the center). Need to center and scale data first, and has to be applied on entire group of predictors.</li>
+</ul>
+<p><strong>PCA</strong></p>
+<ul>
+<li>principal components are uncorrelated</li>
+<li>scree plot shows total variance explained by # of components</li>
+<li>scale of components tend to get smaller bc they account for less and less of the variation</li>
+<li>PCA can be used to look at loadings by “channels”.</li>
+</ul>
+<p><strong>Missing Values</strong></p>
+<ul>
+<li>understand why data is missing first</li>
+<li>is pattern of missing data related to outcome?</li>
+<li>censored data is not missing data since something is known about its value</li>
+<li>can impute missing values with K nearest neighbors</li>
+</ul>
+<p><strong>Removing Variables</strong></p>
+<ul>
+<li>rule of thumb for near-zero variance predictors
+<ul>
+<li>franction of unique values over sample size is low (&lt;10%)</li>
+<li>ratio of most frequent to second most frequent value is large (&gt;20)</li>
+</ul></li>
+<li>variance inflation factor (VIF) can be used to identify collinearity
+<ul>
+<li>limited to linear regression and requires more samples than predictors</li>
+</ul></li>
+<li>could remove min # of predictors so that pairwise correlations are below some threshold (e.g. 0.75)</li>
+</ul>
+<p>RETURN TO PAGE 48</p>
+</div>
+<div id="chapter-4" class="section level3">
+<h3>Chapter 4</h3>
+</div>
+</div>
+<div id="regression-models" class="section level2">
+<h2>Regression Models</h2>
+<div id="chapter-5" class="section level3">
+<h3>Chapter 5</h3>
+</div>
+<div id="chapter-6" class="section level3">
+<h3>Chapter 6</h3>
+</div>
+<div id="chapter-7" class="section level3">
+<h3>Chapter 7</h3>
+</div>
+<div id="chapter-8" class="section level3">
+<h3>Chapter 8</h3>
+</div>
+<div id="chapter-9" class="section level3">
+<h3>Chapter 9</h3>
+</div>
+<div id="chapter-10" class="section level3">
+<h3>Chapter 10</h3>
+</div>
+</div>
+<div id="classification-models" class="section level2">
+<h2>Classification Models</h2>
+<div id="chapter-11" class="section level3">
+<h3>Chapter 11</h3>
+</div>
+<div id="chapter-12" class="section level3">
+<h3>Chapter 12</h3>
+</div>
+<div id="chapter-13" class="section level3">
+<h3>Chapter 13</h3>
+</div>
+<div id="chapter-14" class="section level3">
+<h3>Chapter 14</h3>
+</div>
+<div id="chapter-15" class="section level3">
+<h3>Chapter 15</h3>
+</div>
+<div id="chapter-16" class="section level3">
+<h3>Chapter 16</h3>
+</div>
+<div id="chapter-17" class="section level3">
+<h3>Chapter 17</h3>
+</div>
+</div>
+<div id="other-considerations" class="section level2">
+<h2>Other Considerations</h2>
+<div id="chapter-18" class="section level3">
+<h3>Chapter 18</h3>
+</div>
+<div id="chapter-19" class="section level3">
+<h3>Chapter 19</h3>
+</div>
+<div id="chapter-20" class="section level3">
+<h3>Chapter 20</h3>
+</div>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 

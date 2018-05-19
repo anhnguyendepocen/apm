@@ -1,6 +1,0 @@
----
-title: "Chapter 1"
-output: html_document
----
-
-this is a test

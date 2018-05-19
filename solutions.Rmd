@@ -1,0 +1,83 @@
+---
+title: "Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn -- Student Solutions"
+output: html_document
+---
+
+## General Strategies
+    
+### Chapter 3
+
+
+
+### Chapter 4
+
+
+
+## Regression Models
+
+### Chapter 5
+
+
+
+### Chapter 6
+
+
+
+### Chapter 7
+
+
+
+### Chapter 8
+
+
+
+### Chapter 9
+
+
+
+### Chapter 10
+
+
+
+## Classification Models
+
+### Chapter 11
+
+
+
+### Chapter 12
+
+
+
+### Chapter 13
+
+
+
+### Chapter 14
+
+
+
+### Chapter 15
+
+
+
+### Chapter 16
+
+
+
+### Chapter 17
+
+
+
+## Other Considerations
+
+### Chapter 18
+
+
+
+### Chapter 19
+
+
+
+### Chapter 20
+
