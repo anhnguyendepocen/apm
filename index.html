@@ -176,7 +176,7 @@ $(document).ready(function ()  {
 
     // establish options
     var options = {
-      selectors: "h1,h2,h3",
+      selectors: "h1,h2,h3,h4",
       theme: "bootstrap3",
       context: '.toc-content',
       hashGenerator: function (text) {
@@ -341,124 +341,8 @@ div.tocify {
 <pre class="r"><code>library(AppliedPredictiveModeling)
 library(e1071)
 data(&quot;segmentationOriginal&quot;)
-apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))</code></pre>
-<pre><code>##                      AngleCh1                AngleStatusCh1 
-##                   -0.01854876                    0.92866706 
-##                       AreaCh1                 AreaStatusCh1 
-##                    3.36801803                    3.08804420 
-##                   AvgIntenCh1                   AvgIntenCh2 
-##                    3.19351951                    0.97769142 
-##                   AvgIntenCh3                   AvgIntenCh4 
-##                    2.71682974                    1.82474941 
-##             AvgIntenStatusCh1             AvgIntenStatusCh2 
-##                    1.52937848                    0.90590558 
-##             AvgIntenStatusCh3             AvgIntenStatusCh4 
-##                    3.01276804                    2.22077336 
-##        ConvexHullAreaRatioCh1  ConvexHullAreaRatioStatusCh1 
-##                    2.46192050                    3.08907143 
-##       ConvexHullPerimRatioCh1 ConvexHullPerimRatioStatusCh1 
-##                   -1.31387868                    1.56909379 
-##           DiffIntenDensityCh1           DiffIntenDensityCh3 
-##                    2.66778149                    2.06717124 
-##           DiffIntenDensityCh4     DiffIntenDensityStatusCh1 
-##                    1.81997087                    1.86864549 
-##     DiffIntenDensityStatusCh3     DiffIntenDensityStatusCh4 
-##                    1.44537894                    1.57377555 
-##               EntropyIntenCh1               EntropyIntenCh3 
-##                    0.36556307                   -0.99902221 
-##               EntropyIntenCh4         EntropyIntenStatusCh1 
-##                   -0.83210097                    0.73125237 
-##         EntropyIntenStatusCh3         EntropyIntenStatusCh4 
-##                    0.84143095                    1.10278084 
-##                 EqCircDiamCh1           EqCircDiamStatusCh1 
-##                    1.97636715                    2.48969012 
-##               EqEllipseLWRCh1         EqEllipseLWRStatusCh1 
-##                    2.56912800                    2.50553220 
-##         EqEllipseOblateVolCh1   EqEllipseOblateVolStatusCh1 
-##                    5.42783500                    3.53030626 
-##        EqEllipseProlateVolCh1  EqEllipseProlateVolStatusCh1 
-##                    5.39469639                    3.96579965 
-##               EqSphereAreaCh1         EqSphereAreaStatusCh1 
-##                    3.36785942                    3.08804420 
-##                EqSphereVolCh1          EqSphereVolStatusCh1 
-##                    5.30096883                    3.82036812 
-##                FiberAlign2Ch3                FiberAlign2Ch4 
-##                   -0.06488576                   -0.11586651 
-##          FiberAlign2StatusCh3          FiberAlign2StatusCh4 
-##                    1.03404665                    0.74635872 
-##                FiberLengthCh1          FiberLengthStatusCh1 
-##                    2.29339150                    2.84791906 
-##                 FiberWidthCh1           FiberWidthStatusCh1 
-##                    0.98076311                    1.46060755 
-##               IntenCoocASMCh3               IntenCoocASMCh4 
-##                    2.53956418                    2.67278483 
-##         IntenCoocASMStatusCh3         IntenCoocASMStatusCh4 
-##                    1.64477492                    2.22816175 
-##          IntenCoocContrastCh3          IntenCoocContrastCh4 
-##                    1.56752226                    3.32735052 
-##    IntenCoocContrastStatusCh3    IntenCoocContrastStatusCh4 
-##                    0.83098552                    1.42257680 
-##           IntenCoocEntropyCh3           IntenCoocEntropyCh4 
-##                   -1.13827522                   -1.19337825 
-##     IntenCoocEntropyStatusCh3     IntenCoocEntropyStatusCh4 
-##                    0.76114076                    1.11481584 
-##               IntenCoocMaxCh3               IntenCoocMaxCh4 
-##                    1.04201928                    1.09933017 
-##         IntenCoocMaxStatusCh3         IntenCoocMaxStatusCh4 
-##                    0.53392407                    0.98707434 
-##                  KurtIntenCh1                  KurtIntenCh3 
-##                   13.11712681                    6.00500092 
-##                  KurtIntenCh4            KurtIntenStatusCh1 
-##                    7.47530964                    4.46755725 
-##            KurtIntenStatusCh3            KurtIntenStatusCh4 
-##                    2.76835107                    2.99250610 
-##                     LengthCh1               LengthStatusCh1 
-##                    1.93593291                    2.41307106 
-##    MemberAvgAvgIntenStatusCh2  MemberAvgTotalIntenStatusCh2 
-##                           NaN                           NaN 
-##            NeighborAvgDistCh1      NeighborAvgDistStatusCh1 
-##                    0.42296159                    0.83229336 
-##            NeighborMinDistCh1      NeighborMinDistStatusCh1 
-##                    2.28546514                    2.08842063 
-##            NeighborVarDistCh1      NeighborVarDistStatusCh1 
-##                   -0.09980093                    1.00866919 
-##                      PerimCh1                PerimStatusCh1 
-##                    2.54570913                    3.08657269 
-##                   ShapeBFRCh1             ShapeBFRStatusCh1 
-##                   -0.43174883                    1.26303512 
-##                   ShapeLWRCh1             ShapeLWRStatusCh1 
-##                    2.36346271                    2.51184770 
-##                   ShapeP2ACh1             ShapeP2AStatusCh1 
-##                    2.14478059                    3.24257621 
-##                  SkewIntenCh1                  SkewIntenCh3 
-##                    1.54284419                    2.10087174 
-##                  SkewIntenCh4            SkewIntenStatusCh1 
-##                    2.49549339                    1.48739146 
-##            SkewIntenStatusCh3            SkewIntenStatusCh4 
-##                    1.50183305                    1.73391489 
-##             SpotFiberCountCh3             SpotFiberCountCh4 
-##                    1.66684453                    2.94584637 
-##       SpotFiberCountStatusCh3       SpotFiberCountStatusCh4 
-##                    1.19082265                    2.88477288 
-##                 TotalIntenCh1                 TotalIntenCh2 
-##                    5.19752078                    1.62221195 
-##                 TotalIntenCh3                 TotalIntenCh4 
-##                    2.75802704                    2.73437011 
-##           TotalIntenStatusCh1           TotalIntenStatusCh2 
-##                    1.57356002                    0.85577998 
-##           TotalIntenStatusCh3           TotalIntenStatusCh4 
-##                    3.46545082                    1.31924568 
-##                   VarIntenCh1                   VarIntenCh3 
-##                    2.64697010                    2.32709388 
-##                   VarIntenCh4             VarIntenStatusCh1 
-##                    2.17836235                    1.49811262 
-##             VarIntenStatusCh3             VarIntenStatusCh4 
-##                    1.50644634                    1.43517151 
-##                      WidthCh1                WidthStatusCh1 
-##                    1.82291886                    2.07181522 
-##                     XCentroid                     YCentroid 
-##                   -0.05216151                    0.48625392</code></pre>
-<pre class="r"><code># can&#39;t match the 2.39 from book</code></pre>
+#apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))
+# can&#39;t match the 2.39 from book</code></pre>
 <p><strong>Box-Cox Transformation</strong></p>
 <p>This can be applied independently to each predictor that contains values &gt; 0.</p>
 <p><span class="math display">\[x^{*} = \left\{\begin{matrix}
@@ -496,10 +380,136 @@ log(x), &amp; \lambda = 0 \end{matrix}\right.\]</span></p>
 </ul></li>
 <li>could remove min # of predictors so that pairwise correlations are below some threshold (e.g. 0.75)</li>
 </ul>
-<p>RETURN TO PAGE 48</p>
+<pre class="r"><code>library(AppliedPredictiveModeling)
+library(e1071)
+library(caret)
+library(corrplot)
+data(&quot;segmentationOriginal&quot;)
+segData &lt;- subset(segmentationOriginal, Case == &quot;Train&quot;)
+cellID &lt;- segData$Cell
+class &lt;- segData$Class
+case &lt;- segData$Case
+segData &lt;- segData[, -(1:3)]  # drop cols
+
+statusColNum &lt;- grep(&quot;Status&quot;, names(segData))  # binary versions of predictors
+segData &lt;- segData[, -statusColNum]
+skewValues &lt;- apply(segData, 2, skewness)
+head(skewValues)</code></pre>
+<pre><code>##    AngleCh1     AreaCh1 AvgIntenCh1 AvgIntenCh2 AvgIntenCh3 AvgIntenCh4 
+## -0.02426252  3.52510745  2.95918524  0.84816033  2.20234214  1.90047128</code></pre>
+<pre class="r"><code># Box Cox Transform
+Ch1AreaTrans &lt;- BoxCoxTrans(segData$AreaCh1)
+Ch1AreaTrans</code></pre>
+<pre><code>## Box-Cox Transformation
+## 
+## 1009 data points used to estimate Lambda
+## 
+## Input data summary:
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   150.0   194.0   256.0   325.1   376.0  2186.0 
+## 
+## Largest/Smallest: 14.6 
+## Sample Skewness: 3.53 
+## 
+## Estimated Lambda: -0.9</code></pre>
+<pre class="r"><code>head(segData$AreaCh1)</code></pre>
+<pre><code>## [1] 819 431 298 256 258 358</code></pre>
+<pre class="r"><code>predict(Ch1AreaTrans, head(segData$AreaCh1))</code></pre>
+<pre><code>## [1] 1.108458 1.106383 1.104520 1.103554 1.103607 1.105523</code></pre>
+<pre class="r"><code># PCA using base R
+pcaObject &lt;- prcomp(segData,
+                    center = TRUE, scale. = TRUE)
+percentVariance &lt;- pcaObject$sdev^2/sum(pcaObject$sdev^2)*100
+percentVariance[1:3]  # pct var explained</code></pre>
+<pre><code>## [1] 20.91236 17.01330 11.88689</code></pre>
+<pre class="r"><code>head(pcaObject$x[, 1:5])  # transformed object</code></pre>
+<pre><code>##           PC1        PC2         PC3       PC4        PC5
+## 2   5.0985749  4.5513804 -0.03345155 -2.640339  1.2783212
+## 3  -0.2546261  1.1980326 -1.02059569 -3.731079  0.9994635
+## 4   1.2928941 -1.8639348 -1.25110461 -2.414857 -1.4914838
+## 12 -1.4646613 -1.5658327  0.46962088 -3.388716 -0.3302324
+## 15 -0.8762771 -1.2790055 -1.33794261 -3.516794  0.3936099
+## 16 -0.8615416 -0.3286842 -0.15546723 -2.206636  1.4731658</code></pre>
+<pre class="r"><code>head(pcaObject$rotation[, 1:3])  # loadings</code></pre>
+<pre><code>##                      PC1         PC2          PC3
+## AngleCh1     0.001213758 -0.01284461  0.006816473
+## AreaCh1      0.229171873  0.16061734  0.089811727
+## AvgIntenCh1 -0.102708778  0.17971332  0.067696745
+## AvgIntenCh2 -0.154828672  0.16376018  0.073534399
+## AvgIntenCh3 -0.058042158  0.11197704 -0.185473286
+## AvgIntenCh4 -0.117343465  0.21039086 -0.105060977</code></pre>
+<pre class="r"><code># pre-processing with caret
+trans &lt;- preProcess(segData,
+                    method = c(&quot;BoxCox&quot;, &quot;center&quot;, &quot;scale&quot;, &quot;pca&quot;))
+trans</code></pre>
+<pre><code>## Created from 1009 samples and 58 variables
+## 
+## Pre-processing:
+##   - Box-Cox transformation (47)
+##   - centered (58)
+##   - ignored (0)
+##   - principal component signal extraction (58)
+##   - scaled (58)
+## 
+## Lambda estimates for Box-Cox transformation:
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## -2.00000 -0.50000 -0.10000  0.05106  0.30000  2.00000 
+## 
+## PCA needed 19 components to capture 95 percent of the variance</code></pre>
+<pre class="r"><code>transformed &lt;- predict(trans, segData)
+head(transformed)</code></pre>
+<pre><code>##           PC1        PC2        PC3       PC4        PC5        PC6
+## 2   1.5684742  6.2907855 -0.3333299 -3.063327 -1.3415782  0.3933609
+## 3  -0.6664055  2.0455375 -1.4416841 -4.701183 -1.7422020  0.4313114
+## 4   3.7500055 -0.3915610 -0.6690260 -4.020753  1.7927777 -0.8542507
+## 12  0.3768509 -2.1897554  1.4380167 -5.327116 -0.4066757  1.1092318
+## 15  1.0644951 -1.4646516 -0.9900478 -5.627351 -0.8650174  0.1070749
+## 16 -0.3798629  0.2173028  0.4387980 -2.069880 -1.9363920 -0.3696683
+##            PC7        PC8       PC9        PC10        PC11       PC12
+## 2  -1.31779481 -1.8965728 0.7111801  0.16193272  1.44061816 -0.6647078
+## 3   1.28450248 -3.0829008 1.9973303  0.58665039  0.80080447  1.4480935
+## 4  -0.07092724 -0.5997223 0.9873784 -0.47230884  1.22229470  1.1277348
+## 12  0.70231874 -0.9667673 0.4970412 -0.10925035  1.59963522 -0.6665738
+## 15  0.49640237 -0.6569112 0.4917103 -0.01652356  0.01154796 -0.7153114
+## 16  0.01207458 -1.2991267 0.8748767 -0.28802701 -0.32026720  1.3544711
+##           PC13       PC14         PC15         PC16         PC17
+## 2  -0.50341167 -0.5251037  0.209541528  0.001408739  0.783699478
+## 3   0.44875803 -0.4299460 -0.610433146 -1.058349329 -0.791062674
+## 4  -1.37477652 -1.4884756 -0.712689953 -0.359746977 -0.002913506
+## 12 -1.26751477 -0.2010528  0.135890457 -1.125603114 -0.025376331
+## 15 -0.06833084 -0.2925842  0.003031988 -0.046983964 -0.678036827
+## 16 -0.68148834  0.3984937 -1.948861159 -0.746533391  1.413093003
+##           PC18        PC19
+## 2  -0.55515083  0.68129112
+## 3   0.06569274  0.14157724
+## 4   1.35736326  0.10187098
+## 12 -0.63185874 -0.96813663
+## 15 -0.58461317  0.05084857
+## 16 -1.96291699  0.73874900</code></pre>
+<pre class="r"><code>nearZeroVar(segData)</code></pre>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>correlations &lt;- cor(segData)
+correlations[1:4, 1:4]</code></pre>
+<pre><code>##                 AngleCh1      AreaCh1 AvgIntenCh1 AvgIntenCh2
+## AngleCh1     1.000000000 -0.002627172 -0.04300776 -0.01944681
+## AreaCh1     -0.002627172  1.000000000 -0.02529739 -0.15330301
+## AvgIntenCh1 -0.043007757 -0.025297394  1.00000000  0.52521711
+## AvgIntenCh2 -0.019446810 -0.153303007  0.52521711  1.00000000</code></pre>
+<pre class="r"><code>#corrplot(correlations, order = &quot;hclust&quot;)
+
+highCorr &lt;- findCorrelation(correlations, cutoff = 0.75)
+length(highCorr)</code></pre>
+<pre><code>## [1] 32</code></pre>
+<pre class="r"><code>head(highCorr)</code></pre>
+<pre><code>## [1] 23 40 43 36  7 15</code></pre>
+<pre class="r"><code>filteredSegData &lt;- segData[, -highCorr]</code></pre>
 </div>
 <div id="chapter-4" class="section level3">
 <h3>Chapter 4</h3>
+<ul>
+<li>apparent performance is using training set to predict model performance</li>
+<li>tuning parameters are model params that can’t be estimated with formulas (number of neighbors in a KNN classification model)</li>
+</ul>
 </div>
 </div>
 <div id="regression-models" class="section level2">

@@ -4,80 +4,135 @@ output: html_document
 ---
 
 ## General Strategies
-    
-### Chapter 3
 
+### Exercise 3.1
 
+```{r, message=FALSE}
+library(mlbench)
+data(Glass)
+str(Glass)
 
-### Chapter 4
+# (a) visualizations
+pairs(Glass[,-10])
+
+library(tidyverse)
+library(ggplot2)
+
+Glass[, -10] %>% gather() %>% head()  # check
+ggplot(gather(Glass[, -10]), aes(value)) +
+  geom_histogram(bins = 10) +
+  facet_wrap(~key, scales = "free_x")
+
+library(corrplot)
+correlations <- cor(Glass[, -10])
+correlations
+corrplot(correlations, order = "hclust")
+
+# (b) outliers / skewness
+# there seems to be an outlier for K and possibly for Fe
+library(e1071)
+apply(Glass[, -10], 2, skewness)  # definitely skewed
+
+# (c) relevant transformations
+# apply box cox to skewed predictors
+library(caret)
+RITrans <- BoxCoxTrans(Glass$RI)
+RITrans
+predict(RITrans, head(Glass$RI))
+
+```
+
+### Exercise 3.2
+
+```{r, message=FALSE}
+library(mlbench)
+data("Soybean")
+str(Soybean)
+
+# (a) category frequencies
+library(caret)
+nearZeroVar(Soybean, saveMetrics = TRUE)
+sapply(Soybean[,nearZeroVar(Soybean)], table)
+
+# (b) missing data patterns
+library(mice)
+md.pattern(Soybean)  # 562 of 683 have values for all cols
+# missing values seem to happen for entire categories, i.e. all leaf cols
+md.pattern(Soybean) %>% colnames  # col names from most to least filled out
+
+# (c) handle missing values 
+soy_data <- Soybean[, -nearZeroVar(Soybean)]  # drop 3 cols
+preProcValues <- preProcess(soy_data, method = c("knnImpute"))  # doesn't work bc of categorical vars?
+soy_data_imputed <- mice(soy_data, method = "pmm", seed = 500)
+```
+
+### Exercise 3.3
+
+```{r, message=FALSE}
+# (a) category frequencies
+library(caret)
+data(BloodBrain)
+
+# (b) degenerate distributions
+# assume this means dist with near zero variance
+library(magrittr)
+sapply(bbbDescr[,nearZeroVar(bbbDescr)], table)
+sapply(bbbDescr[,nearZeroVar(bbbDescr)], table) %>% names()
+
+# (c) correlations
+correlations <- cor(bbbDescr)
+highCorr <- findCorrelation(correlations, cutoff = 0.75)
+length(highCorr)  # yes, strong correlations
+# use PCA or remove highly correlated predictors
+# almost half the vars are highly correlated
+# yes, will impact number of predictors for modeling
+```
+
+### Exercise 4.1
 
 
 
 ## Regression Models
 
-### Chapter 5
+### Exercise 6
 
 
 
-### Chapter 6
+### Exercise 7
 
 
 
-### Chapter 7
-
-
-
-### Chapter 8
-
-
-
-### Chapter 9
-
-
-
-### Chapter 10
+### Exercise 8
 
 
 
 ## Classification Models
 
-### Chapter 11
+### Exercise 12
 
 
 
-### Chapter 12
+### Exercise 13
 
 
 
-### Chapter 13
+### Exercise 14
 
 
 
-### Chapter 14
-
-
-
-### Chapter 15
-
-
-
-### Chapter 16
-
-
-
-### Chapter 17
+### Exercise 16
 
 
 
 ## Other Considerations
 
-### Chapter 18
+### Exercise 18
 
 
 
-### Chapter 19
+### Exercise 19
 
 
 
-### Chapter 20
+### Exercise 20
 

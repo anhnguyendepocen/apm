@@ -5,7 +5,7 @@ output:
     theme: yeti
     highlight: textmate
     toc: true
-    toc_depth: 3
+    toc_depth: 4
     toc_float: true
 navbar:
   title: "Applied Predictive Modeling (2013)"
