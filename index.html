@@ -507,9 +507,274 @@ length(highCorr)</code></pre>
 <div id="chapter-4" class="section level3">
 <h3>Chapter 4</h3>
 <ul>
-<li>apparent performance is using training set to predict model performance</li>
-<li>tuning parameters are model params that can’t be estimated with formulas (number of neighbors in a KNN classification model)</li>
+<li><strong>apparent</strong> performance is using training set to predict model performance</li>
+<li><strong>tuning parameters</strong> are model params that can’t be estimated with formulas (number of neighbors in a KNN classification model)</li>
 </ul>
+<p><strong>Data Splitting</strong></p>
+<ul>
+<li>when samples are not large, may need to avoid test set
+<ul>
+<li>test set needs to be sufficiently large to have power/precision</li>
+</ul></li>
+<li>stratified random sampling applies random sampling within groups to account for the outcome</li>
+<li>maximum dissimilarity sampling splits based on predictors</li>
+</ul>
+<p><strong>Resampling Techniques</strong></p>
+<ul>
+<li>k-fold cross-validation
+<ul>
+<li>usually k is set to 5 or 10, but no formal rule</li>
+<li>larger k has smaller bias (difference b/w estimated and true model performance), but more computationally demanding</li>
+<li>k-fold CV generally has higher variance compared to other methods (problem for small datasets)</li>
+<li>bias for small values of k (2 or 3) is about the same as the bootstrap, but with larger variance</li>
+</ul></li>
+<li>stratified random sampling applied to k-fold CV selects k partitions so that folds are balanced with respect to the outcome</li>
+<li>leave-one-out cross-validation (LOOCV) can be thought of as a special case of k-fold where k equals to number of samples
+<ul>
+<li>has a closed form solution for linear regression models</li>
+</ul></li>
+<li>repeated training/test splits, also called leave-group-out CV or monte carlo CV
+<ul>
+<li>rule of thumb for group size is 75-80%</li>
+<li>unlike k-fold CV, samples can be in multiple hold out sets, and repitions are usually larger (50-200)</li>
+</ul></li>
+<li>bootstrap samples data with replacement to create subsets that are the same size as total samples
+<ul>
+<li>samples that are not selected are the “out of bag” samples, used like a hold out test set</li>
+<li>tend to have less uncertainty than k-fold CV</li>
+<li>bias can be problematic for small datasets</li>
+<li>632 method: 0.632 x bootstrap estimate + 0.368 x apparent error rate</li>
+<li>63.2% of data points are represented at least once in the bootstrap sample</li>
+<li>this method reduces bias, but can be unstable for smaller datasets</li>
+<li>there’s also a 632+ method</li>
+</ul></li>
+</ul>
+<p><strong>Choosing Tuning Parameters</strong></p>
+<ul>
+<li>in general, favor simpler models
+<ul>
+<li>choosing tuning params based on numically optimal value can still lead to overfitting</li>
+</ul></li>
+<li>one-standard error method starts with numerically optimal param and picks the simplest model within one sd</li>
+<li>tolerance is (x-optimal)/optimal and can be used if deciding a certain % loss in performance is acceptable</li>
+</ul>
+<p><strong>Choosing Resampling Methods</strong></p>
+<ul>
+<li>if sample size is small, recommend 10-fold CV
+<ul>
+<li>good bias/variance properties</li>
+<li>low computational costs</li>
+</ul></li>
+<li>if goal is model selection instead of best indicator of performance, recommend a bootstrap method
+<ul>
+<li>low variance</li>
+</ul></li>
+<li>if sample size is large, differences between resampling methods are smaller
+<ul>
+<li>computational efficiency is more important</li>
+</ul></li>
+</ul>
+<p><strong>Choosing Between Models</strong></p>
+<ol style="list-style-type: decimal">
+<li>start with several models that are less interpretable and most flexible (boosted trees, SVM)</li>
+<li>investigate simpler models that are less opaque (MARS, PLS, GAM, naive Bayes)</li>
+<li>use the simplest model that reasonably approximates performance of complex models</li>
+</ol>
+<p>A <strong>paired t-test</strong> can be used to evaluate if there are statistically significant differences in model performance.</p>
+<pre class="r"><code>rm(list=ls())
+library(AppliedPredictiveModeling)
+library(caret)
+#library(Design)  # replaced with rms
+library(rms)
+library(e1071)
+library(ipred)
+library(MASS)
+
+data(twoClassData)
+str(predictors)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    208 obs. of  2 variables:
+##  $ PredictorA: num  0.158 0.655 0.706 0.199 0.395 ...
+##  $ PredictorB: num  0.1609 0.4918 0.6333 0.0881 0.4152 ...</code></pre>
+<pre class="r"><code>str(classes)</code></pre>
+<pre><code>##  Factor w/ 2 levels &quot;Class1&quot;,&quot;Class2&quot;: 2 2 2 2 2 2 2 2 2 2 ...</code></pre>
+<pre class="r"><code># data splitting
+set.seed(1)
+trainingRows &lt;- createDataPartition(classes, p = 0.8, list = FALSE)
+head(trainingRows)</code></pre>
+<pre><code>##      Resample1
+## [1,]         1
+## [2,]         2
+## [3,]         3
+## [4,]         4
+## [5,]         5
+## [6,]         6</code></pre>
+<pre class="r"><code>trainPredictors &lt;- predictors[trainingRows,]
+trainClasses &lt;- classes[trainingRows]  # not a dataframe, just vector
+testPredictors &lt;- predictors[-trainingRows,]
+testClasses &lt;- classes[-trainingRows]
+
+str(trainPredictors)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    167 obs. of  2 variables:
+##  $ PredictorA: num  0.158 0.655 0.706 0.199 0.395 ...
+##  $ PredictorB: num  0.1609 0.4918 0.6333 0.0881 0.4152 ...</code></pre>
+<pre class="r"><code>str(testPredictors)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    41 obs. of  2 variables:
+##  $ PredictorA: num  0.0658 0.1056 0.2909 0.4129 0.0472 ...
+##  $ PredictorB: num  0.1786 0.0801 0.3021 0.2869 0.0414 ...</code></pre>
+<pre class="r"><code># caret fn &#39;maxdissim&#39; generates test set using max dissimilarity sampling
+
+# resampling
+# - repeated training/test splits
+set.seed(1)
+repeatedSplits &lt;- createDataPartition(trainClasses, p = 0.8, times = 3)
+str(repeatedSplits)</code></pre>
+<pre><code>## List of 3
+##  $ Resample1: int [1:135] 1 2 4 5 6 8 9 10 11 12 ...
+##  $ Resample2: int [1:135] 2 3 4 6 7 8 9 11 14 15 ...
+##  $ Resample3: int [1:135] 4 5 6 7 8 9 11 13 14 15 ...</code></pre>
+<pre class="r"><code># - k-fold CV
+set.seed(1)
+cvSplits &lt;- createFolds(trainClasses, k = 10, returnTrain = TRUE)
+str(cvSplits)</code></pre>
+<pre><code>## List of 10
+##  $ Fold01: int [1:151] 2 3 4 5 6 7 11 12 13 14 ...
+##  $ Fold02: int [1:150] 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Fold03: int [1:150] 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Fold04: int [1:151] 1 2 3 4 5 7 8 9 10 11 ...
+##  $ Fold05: int [1:150] 1 2 3 5 6 7 8 9 10 11 ...
+##  $ Fold06: int [1:150] 1 2 3 4 5 6 8 9 10 11 ...
+##  $ Fold07: int [1:150] 1 3 4 5 6 7 8 9 10 11 ...
+##  $ Fold08: int [1:151] 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Fold09: int [1:150] 1 2 4 5 6 7 8 9 10 12 ...
+##  $ Fold10: int [1:150] 1 2 3 4 6 7 8 9 10 11 ...</code></pre>
+<pre class="r"><code>cvPredictors1 &lt;- trainPredictors[cvSplits[[1]],]
+cvClasses1 &lt;- trainClasses[cvSplits[[1]]]
+nrow(cvPredictors1)/nrow(trainPredictors)</code></pre>
+<pre><code>## [1] 0.9041916</code></pre>
+<pre class="r"><code># - bootstrapping: createResamples
+# - repeated CV: createMultiFolds
+
+# model building
+# using formula interface w large data can by unnecessarily slow
+# - using knn3 from caret
+trainPredictors &lt;- as.matrix(trainPredictors)
+knnFit &lt;- knn3(x = trainPredictors, y = trainClasses, k = 5)
+knnFit</code></pre>
+<pre><code>## 5-nearest neighbor model
+## Training set outcome distribution:
+## 
+## Class1 Class2 
+##     89     78</code></pre>
+<pre class="r"><code>testPredictions &lt;- predict(knnFit, newdata = testPredictors, type = &quot;class&quot;)
+head(testPredictions)</code></pre>
+<pre><code>## [1] Class2 Class2 Class1 Class1 Class2 Class2
+## Levels: Class1 Class2</code></pre>
+<pre class="r"><code># determining tuning parameters
+rm(list=ls())
+data(&quot;GermanCredit&quot;)
+set.seed(1056)
+trainingRows &lt;- createDataPartition(GermanCredit$Class, p = 0.8, list = FALSE)
+GermanCreditTrain &lt;- GermanCredit[trainingRows, -(1:9)]  # drop first 9 cols
+dropZeroVar &lt;- nearZeroVar(GermanCreditTrain)
+GermanCreditTrain &lt;- GermanCreditTrain[, -dropZeroVar]
+GermanCreditTest &lt;- GermanCredit[-trainingRows, -(1:9)]  # drop first 9 cols
+GermanCreditTest &lt;- GermanCreditTest[, -dropZeroVar]
+svmFit &lt;- train(Class ~.,
+                data = GermanCreditTrain,
+                method = &quot;svmRadial&quot;,
+                preProc = c(&quot;center&quot;, &quot;scale&quot;),
+                tuneLength = 10,  # evals 2^(-2) to 2^7
+                trControl = trainControl(method = &quot;repeatedcv&quot;, repeats = 5)) 
+svmFit</code></pre>
+<pre><code>## Support Vector Machines with Radial Basis Function Kernel 
+## 
+## 800 samples
+##  41 predictor
+##   2 classes: &#39;Bad&#39;, &#39;Good&#39; 
+## 
+## Pre-processing: centered (41), scaled (41) 
+## Resampling: Cross-Validated (10 fold, repeated 5 times) 
+## Summary of sample sizes: 720, 720, 720, 720, 720, 720, ... 
+## Resampling results across tuning parameters:
+## 
+##   C       Accuracy  Kappa    
+##     0.25  0.70000   0.0000000
+##     0.50  0.71325   0.0978653
+##     1.00  0.74350   0.2819257
+##     2.00  0.75875   0.3601013
+##     4.00  0.75550   0.3685613
+##     8.00  0.73575   0.3395050
+##    16.00  0.71375   0.2980955
+##    32.00  0.69175   0.2562410
+##    64.00  0.67950   0.2313896
+##   128.00  0.67225   0.2150734
+## 
+## Tuning parameter &#39;sigma&#39; was held constant at a value of 0.0141941
+## Accuracy was used to select the optimal model using the largest value.
+## The final values used for the model were sigma = 0.0141941 and C = 2.</code></pre>
+<pre class="r"><code>plot(svmFit, scales = list(x = list(log = 2)))</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-91-1.png" width="672" /></p>
+<pre class="r"><code>#predictedProbs &lt;- predict(svmFit, newdata = GermanCreditTest, type = &quot;prob&quot;)  # see errata
+
+# between model comparison
+set.seed(1056)
+logisticReg &lt;- train(Class ~.,
+                     data = GermanCreditTrain,
+                     method = &quot;glm&quot;,
+                     trControl = trainControl(method = &quot;repeatedcv&quot;, repeats =5))
+logisticReg  # need to remove extra cols for one hot encoding? not going to bother for notes</code></pre>
+<pre><code>## Generalized Linear Model 
+## 
+## 800 samples
+##  41 predictor
+##   2 classes: &#39;Bad&#39;, &#39;Good&#39; 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold, repeated 5 times) 
+## Summary of sample sizes: 720, 720, 720, 720, 720, 720, ... 
+## Resampling results:
+## 
+##   Accuracy  Kappa    
+##   0.73025   0.3064704</code></pre>
+<pre class="r"><code>resamp &lt;- resamples(list(SVM = svmFit, Logistic = logisticReg))
+summary(resamp)</code></pre>
+<pre><code>## 
+## Call:
+## summary.resamples(object = resamp)
+## 
+## Models: SVM, Logistic 
+## Number of resamples: 50 
+## 
+## Accuracy 
+##           Min.  1st Qu. Median    Mean  3rd Qu.  Max. NA&#39;s
+## SVM      0.675 0.728125 0.7625 0.75875 0.787500 0.825    0
+## Logistic 0.625 0.700000 0.7250 0.73025 0.759375 0.800    0
+## 
+## Kappa 
+##               Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA&#39;s
+## SVM      0.1666667 0.2843344 0.3457102 0.3601013 0.4594595 0.5512821    0
+## Logistic 0.0625000 0.2500000 0.3002137 0.3064704 0.3845504 0.5121951    0</code></pre>
+<pre class="r"><code>?xyplot.resamples
+modelDifferences &lt;- diff(resamp)
+summary(modelDifferences)</code></pre>
+<pre><code>## 
+## Call:
+## summary.diff.resamples(object = modelDifferences)
+## 
+## p-value adjustment: bonferroni 
+## Upper diagonal: estimates of the difference
+## Lower diagonal: p-value for H0: difference = 0
+## 
+## Accuracy 
+##          SVM      Logistic
+## SVM               0.0285  
+## Logistic 0.001231         
+## 
+## Kappa 
+##          SVM     Logistic
+## SVM              0.05363 
+## Logistic 0.02288</code></pre>
+<pre class="r"><code># small values for SVM mean small p vals so possible that models are really different</code></pre>
 </div>
 </div>
 <div id="regression-models" class="section level2">

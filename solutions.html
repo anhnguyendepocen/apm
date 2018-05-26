@@ -664,6 +664,31 @@ length(highCorr)  # yes, strong correlations</code></pre>
 </div>
 <div id="exercise-4.1" class="section level3">
 <h3>Exercise 4.1</h3>
+<p><strong>(a)</strong> Goal is to classify music into 6 categories and we have 12,495 samples with 191 predictors. The reponse categories are not balanced (mostly classical, metal and blues are rarer). For a larger dataset like this, computational efficiency is more important. Maybe go with a 10-fold CV. Because response variable is not balanced, may need to use stratified random sampling.</p>
+<p><strong>(b)</strong></p>
+<ol style="list-style-type: decimal">
+<li>set seed</li>
+<li>randomly sample training vs test set</li>
+<li>create folds using stratified random sampling</li>
+</ol>
+</div>
+<div id="exercise-4.2" class="section level3">
+<h3>Exercise 4.2</h3>
+<p><strong>(a)</strong> 165 samples and 1,107 predictors. The response is highly skewed and predictors are sparse (15.5% are present) and highly correlated. Because sample size is small, should use 10-fold CV. This has good bias and variance properties.</p>
+</div>
+<div id="exercise-4.3" class="section level3">
+<h3>Exercise 4.3</h3>
+<p><strong>(b)</strong></p>
+<pre class="r"><code>mean_r2 &lt;- c(0.444, 0.5, 0.533, 0.545, 0.542, 0.537, 0.534, 0.534, 0.52, 0.507)
+tolerance &lt;- (mean_r2 - max(mean_r2))/max(mean_r2)
+tolerance</code></pre>
+<pre><code>##  [1] -0.185321101 -0.082568807 -0.022018349  0.000000000 -0.005504587
+##  [6] -0.014678899 -0.020183486 -0.020183486 -0.045871560 -0.069724771</code></pre>
+<p>For 10% tolerance, select 2 components.</p>
+<p><strong>(c) &amp; (d)</strong> If goal is to optimize R^2, then choose the model that has the best R^2 model using bootstrapping. Book recommends to run the complex models first. Then, run simple models and pick the simple model that can get close to the complex model results. Otherwise, models can overfit, be too computationally expensive, and/or not be understood.</p>
+</div>
+<div id="exercise-4.4" class="section level3">
+<h3>Exercise 4.4</h3>
 </div>
 </div>
 <div id="regression-models" class="section level2">

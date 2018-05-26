@@ -133,8 +133,149 @@ filteredSegData <- segData[, -highCorr]
 
 ### Chapter 4
 
-* apparent performance is using training set to predict model performance
-* tuning parameters are model params that can't be estimated with formulas (number of neighbors in a KNN classification model)
+* __apparent__ performance is using training set to predict model performance
+* __tuning parameters__ are model params that can't be estimated with formulas (number of neighbors in a KNN classification model)
+
+__Data Splitting__
+
+* when samples are not large, may need to avoid test set
+    * test set needs to be sufficiently large to have power/precision
+* stratified random sampling applies random sampling within groups to account for the outcome
+* maximum dissimilarity sampling splits based on predictors
+
+__Resampling Techniques__
+
+* k-fold cross-validation
+    * usually k is set to 5 or 10, but no formal rule
+    * larger k has smaller bias (difference b/w estimated and true model performance), but more computationally demanding
+    * k-fold CV generally has higher variance compared to other methods (problem for small datasets)
+    * bias for small values of k (2 or 3) is about the same as the bootstrap, but with larger variance
+* stratified random sampling applied to k-fold CV selects k partitions so that folds are balanced with respect to the outcome
+* leave-one-out cross-validation (LOOCV) can be thought of as a special case of k-fold where k equals to number of samples
+    * has a closed form solution for linear regression models
+* repeated training/test splits, also called leave-group-out CV or monte carlo CV
+    * rule of thumb for group size is 75-80%
+    * unlike k-fold CV, samples can be in multiple hold out sets, and repitions are usually larger (50-200)
+* bootstrap samples data with replacement to create subsets that are the same size as total samples
+    * samples that are not selected are the "out of bag" samples, used like a hold out test set
+    * tend to have less uncertainty than k-fold CV
+    * bias can be problematic for small datasets
+    * 632 method: 0.632 x bootstrap estimate + 0.368 x apparent error rate
+      * 63.2% of data points are represented at least once in the bootstrap sample
+      * this method reduces bias, but can be unstable for smaller datasets
+      * there's also a 632+ method
+      
+__Choosing Tuning Parameters__
+
+* in general, favor simpler models
+    * choosing tuning params based on numically optimal value can still lead to overfitting
+* one-standard error method starts with numerically optimal param and picks the simplest model within one sd
+* tolerance is (x-optimal)/optimal and can be used if deciding a certain % loss in performance is acceptable
+
+__Choosing Resampling Methods__
+
+* if sample size is small, recommend 10-fold CV
+    * good bias/variance properties
+    * low computational costs
+* if goal is model selection instead of best indicator of performance, recommend a bootstrap method
+    * low variance
+* if sample size is large, differences between resampling methods are smaller
+    * computational efficiency is more important
+    
+__Choosing Between Models__
+
+1. start with several models that are less interpretable and most flexible (boosted trees, SVM)
+2. investigate simpler models that are less opaque (MARS, PLS, GAM, naive Bayes)
+3. use the simplest model that reasonably approximates performance of complex models
+
+A __paired t-test__ can be used to evaluate if there are statistically significant differences in model performance.
+
+```{r, message=FALSE, warning=FALSE}
+rm(list=ls())
+library(AppliedPredictiveModeling)
+library(caret)
+#library(Design)  # replaced with rms
+library(rms)
+library(e1071)
+library(ipred)
+library(MASS)
+
+data(twoClassData)
+str(predictors)
+str(classes)
+
+# data splitting
+set.seed(1)
+trainingRows <- createDataPartition(classes, p = 0.8, list = FALSE)
+head(trainingRows)
+trainPredictors <- predictors[trainingRows,]
+trainClasses <- classes[trainingRows]  # not a dataframe, just vector
+testPredictors <- predictors[-trainingRows,]
+testClasses <- classes[-trainingRows]
+
+str(trainPredictors)
+str(testPredictors)
+# caret fn 'maxdissim' generates test set using max dissimilarity sampling
+
+# resampling
+# - repeated training/test splits
+set.seed(1)
+repeatedSplits <- createDataPartition(trainClasses, p = 0.8, times = 3)
+str(repeatedSplits)
+# - k-fold CV
+set.seed(1)
+cvSplits <- createFolds(trainClasses, k = 10, returnTrain = TRUE)
+str(cvSplits)
+cvPredictors1 <- trainPredictors[cvSplits[[1]],]
+cvClasses1 <- trainClasses[cvSplits[[1]]]
+nrow(cvPredictors1)/nrow(trainPredictors)
+# - bootstrapping: createResamples
+# - repeated CV: createMultiFolds
+
+# model building
+# using formula interface w large data can by unnecessarily slow
+# - using knn3 from caret
+trainPredictors <- as.matrix(trainPredictors)
+knnFit <- knn3(x = trainPredictors, y = trainClasses, k = 5)
+knnFit
+testPredictions <- predict(knnFit, newdata = testPredictors, type = "class")
+head(testPredictions)
+
+# determining tuning parameters
+rm(list=ls())
+data("GermanCredit")
+set.seed(1056)
+trainingRows <- createDataPartition(GermanCredit$Class, p = 0.8, list = FALSE)
+GermanCreditTrain <- GermanCredit[trainingRows, -(1:9)]  # drop first 9 cols
+dropZeroVar <- nearZeroVar(GermanCreditTrain)
+GermanCreditTrain <- GermanCreditTrain[, -dropZeroVar]
+GermanCreditTest <- GermanCredit[-trainingRows, -(1:9)]  # drop first 9 cols
+GermanCreditTest <- GermanCreditTest[, -dropZeroVar]
+svmFit <- train(Class ~.,
+                data = GermanCreditTrain,
+                method = "svmRadial",
+                preProc = c("center", "scale"),
+                tuneLength = 10,  # evals 2^(-2) to 2^7
+                trControl = trainControl(method = "repeatedcv", repeats = 5)) 
+svmFit
+plot(svmFit, scales = list(x = list(log = 2)))
+#predictedProbs <- predict(svmFit, newdata = GermanCreditTest, type = "prob")  # see errata
+
+# between model comparison
+set.seed(1056)
+logisticReg <- train(Class ~.,
+                     data = GermanCreditTrain,
+                     method = "glm",
+                     trControl = trainControl(method = "repeatedcv", repeats =5))
+logisticReg  # need to remove extra cols for one hot encoding? not going to bother for notes
+resamp <- resamples(list(SVM = svmFit, Logistic = logisticReg))
+summary(resamp)
+?xyplot.resamples
+modelDifferences <- diff(resamp)
+summary(modelDifferences)
+# small values for SVM mean small p vals so possible that models are really different
+```
+
 
 ## Regression Models
 
