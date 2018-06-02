@@ -713,7 +713,7 @@ svmFit</code></pre>
 ## Accuracy was used to select the optimal model using the largest value.
 ## The final values used for the model were sigma = 0.0141941 and C = 2.</code></pre>
 <pre class="r"><code>plot(svmFit, scales = list(x = list(log = 2)))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-91-1.png" width="672" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <pre class="r"><code>#predictedProbs &lt;- predict(svmFit, newdata = GermanCreditTest, type = &quot;prob&quot;)  # see errata
 
 # between model comparison
@@ -781,6 +781,69 @@ summary(modelDifferences)</code></pre>
 <h2>Regression Models</h2>
 <div id="chapter-5" class="section level3">
 <h3>Chapter 5</h3>
+<p><strong>Quantitative Performance Measures</strong></p>
+<ul>
+<li>RMSE is most common</li>
+<li><span class="math inline">\(R^{2}\)</span> is the coefficient of determination
+<ul>
+<li>proportion of information in data explained by model</li>
+<li>simplest version squares the correlation coefficient b/w observed and predicted</li>
+<li>cautions
+<ul>
+<li>this reflects correlation, not accuracy</li>
+<li>is dependent on variation in outcome (in denominator)
+<ul>
+<li><span class="math inline">\(R^{2}=1-RMSE/(Sample Variance)\)</span> so result is worse if variance is low and responses with large variance may have very good <span class="math inline">\(R^{2}\)</span> results</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>rank correlation (Spearman) can be used for models used to rank new samples
+<ul>
+<li>calculated as the correlation coefficent between the ranks of observed and predicted</li>
+</ul></li>
+</ul>
+<p><strong>Variance-Bias Trade-off</strong></p>
+<p>Expected value of MSe is equal to irreducible noise plus squared bias plus model variance.</p>
+<ul>
+<li>Model bias is how close model form can reflect true relationship between predictors and outcome</li>
+<li>Model variance reflects how much model parameters will change if predictors change
+<ul>
+<li>collinearity can increase variance</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[E[MSE] = \sigma^{2} + (Model Bias)^{2} + Model Variance\]</span></p>
+<pre class="r"><code>rm(list=ls())
+observed &lt;-  c(0.22, 0.83,-0.12, 0.89,-0.23,-1.30,-0.15,-1.4,
+               0.62, 0.99,-0.18, 0.32, 0.34,-0.30, 0.04,-0.87,
+               0.55,-1.30,-1.15, 0.20)
+predicted &lt;- c(0.24, 0.78,-0.66, 0.53, 0.70,-0.75,-0.41,-0.43,
+               0.49, 0.79,-1.19, 0.06, 0.75,-0.07, 0.43,-0.42,
+              -0.25,-0.64,-1.26,-0.07)
+residualValues &lt;- observed - predicted
+summary(residualValues)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -0.9700 -0.4200  0.0800 -0.0310  0.2625  1.0100</code></pre>
+<pre class="r"><code># observed versus predicted
+axisRange &lt;- extendrange(c(observed, predicted))
+plot(observed, predicted, ylim = axisRange, xlim = axisRange)
+abline(0, 1, col = &quot;darkgrey&quot;, lty = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<pre class="r"><code># predicted versus residuals
+plot(predicted, residualValues, ylab = &quot;residual&quot;)
+abline(h = 0, col = &quot;darkgrey&quot;, lty = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-23-2.png" width="672" /></p>
+<pre class="r"><code># quantitative model performance measures
+require(caret)
+R2(predicted, observed)</code></pre>
+<pre><code>## [1] 0.5170123</code></pre>
+<pre class="r"><code>RMSE(predicted, observed)</code></pre>
+<pre><code>## [1] 0.5234883</code></pre>
+<pre class="r"><code>cor(predicted, observed)  # base R simple correlation</code></pre>
+<pre><code>## [1] 0.7190357</code></pre>
+<pre class="r"><code>cor(predicted, observed)^2  # match R^2</code></pre>
+<pre><code>## [1] 0.5170123</code></pre>
+<pre class="r"><code>cor(predicted, observed, method = &quot;spearman&quot;)  # rank correlation</code></pre>
+<pre><code>## [1] 0.7554552</code></pre>
 </div>
 <div id="chapter-6" class="section level3">
 <h3>Chapter 6</h3>

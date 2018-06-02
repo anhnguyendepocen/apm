@@ -689,6 +689,79 @@ tolerance</code></pre>
 </div>
 <div id="exercise-4.4" class="section level3">
 <h3>Exercise 4.4</h3>
+<pre class="r"><code>require(AppliedPredictiveModeling)
+require(caret)
+data(oil)
+str(oilType)</code></pre>
+<pre><code>##  Factor w/ 7 levels &quot;A&quot;,&quot;B&quot;,&quot;C&quot;,&quot;D&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
+<pre class="r"><code>table(oilType)</code></pre>
+<pre><code>## oilType
+##  A  B  C  D  E  F  G 
+## 37 26  3  7 11 10  2</code></pre>
+<pre class="r"><code># (a) sample in base R
+set.seed(1)
+table(sample(oilType, 60))</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 21 19  1  6  5  7  1</code></pre>
+<pre class="r"><code>set.seed(2)
+table(sample(oilType, 60))</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 22 15  2  4  9  6  2</code></pre>
+<pre class="r"><code>set.seed(3)
+table(sample(oilType, 60))</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 23 14  1  5  8  7  2</code></pre>
+<pre class="r"><code>set.seed(4)
+table(sample(oilType, 60))</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 21 16  1  5  9  6  2</code></pre>
+<pre class="r"><code>set.seed(5)
+table(sample(oilType, 60))</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 24 15  2  4  8  5  2</code></pre>
+<pre class="r"><code># (b) stratified sampling with caret
+sample_caret_ID &lt;- createDataPartition(oilType, p = 60/96, list = FALSE)
+table(oilType[sample_caret_ID])  # pretty similar to base sample</code></pre>
+<pre><code>## 
+##  A  B  C  D  E  F  G 
+## 24 17  2  5  7  7  2</code></pre>
+<pre class="r"><code># (c) resampling for small sample size
+# could try a 10-fold CV
+
+# (d) binom.test confidence interval
+binom.test(16, 20)  # if 16 out of 20 correct on test set (80% accuracy)</code></pre>
+<pre><code>## 
+##  Exact binomial test
+## 
+## data:  16 and 20
+## number of successes = 16, number of trials = 20, p-value = 0.01182
+## alternative hypothesis: true probability of success is not equal to 0.5
+## 95 percent confidence interval:
+##  0.563386 0.942666
+## sample estimates:
+## probability of success 
+##                    0.8</code></pre>
+<pre class="r"><code># confidence interval can give a sense of uncertainty
+0.943 - 0.563  # width of confidence interval</code></pre>
+<pre><code>## [1] 0.38</code></pre>
+<pre class="r"><code>test_accuracy &lt;- 0.8
+diff(binom.test(20 * test_accuracy, 20)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.37928</code></pre>
+<pre class="r"><code>diff(binom.test(40 * test_accuracy, 40)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.2659556</code></pre>
+<pre class="r"><code>diff(binom.test(60 * test_accuracy, 60)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.2154593</code></pre>
+<pre class="r"><code>diff(binom.test(80 * test_accuracy, 80)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.1855098</code></pre>
+<pre class="r"><code>diff(binom.test(100 * test_accuracy, 100)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.1651871</code></pre>
+<pre class="r"><code>diff(binom.test(1000 * test_accuracy, 1000)[[&quot;conf.int&quot;]])</code></pre>
+<pre><code>## [1] 0.0505388</code></pre>
 </div>
 </div>
 <div id="regression-models" class="section level2">

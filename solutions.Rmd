@@ -3,6 +3,10 @@ title: "Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn -- Stud
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
 ## General Strategies
 
 ### Exercise 3.1
@@ -119,7 +123,42 @@ __(c) & (d)__ If goal is to optimize R^2, then choose the model that has the bes
 ### Exercise 4.4
 
 ```{r, message=FALSE, warning=FALSE}
+require(AppliedPredictiveModeling)
+require(caret)
+data(oil)
+str(oilType)
+table(oilType)
 
+# (a) sample in base R
+set.seed(1)
+table(sample(oilType, 60))
+set.seed(2)
+table(sample(oilType, 60))
+set.seed(3)
+table(sample(oilType, 60))
+set.seed(4)
+table(sample(oilType, 60))
+set.seed(5)
+table(sample(oilType, 60))
+
+# (b) stratified sampling with caret
+sample_caret_ID <- createDataPartition(oilType, p = 60/96, list = FALSE)
+table(oilType[sample_caret_ID])  # pretty similar to base sample
+
+# (c) resampling for small sample size
+# could try a 10-fold CV
+
+# (d) binom.test confidence interval
+binom.test(16, 20)  # if 16 out of 20 correct on test set (80% accuracy)
+# confidence interval can give a sense of uncertainty
+0.943 - 0.563  # width of confidence interval
+test_accuracy <- 0.8
+diff(binom.test(20 * test_accuracy, 20)[["conf.int"]])
+diff(binom.test(40 * test_accuracy, 40)[["conf.int"]])
+diff(binom.test(60 * test_accuracy, 60)[["conf.int"]])
+diff(binom.test(80 * test_accuracy, 80)[["conf.int"]])
+diff(binom.test(100 * test_accuracy, 100)[["conf.int"]])
+diff(binom.test(1000 * test_accuracy, 1000)[["conf.int"]])
 ```
 
 ## Regression Models
