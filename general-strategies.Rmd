@@ -1,0 +1,155 @@
+---
+title: "APM Computation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+## General Strategies
+
+### Chapter 3: Data Pre-Processing
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+require(AppliedPredictiveModeling)
+require(e1071)
+require(caret)
+require(corrplot)
+data("segmentationOriginal")
+#apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))
+# can't match the 2.39 from book
+
+segData <- subset(segmentationOriginal, Case == "Train")
+cellID <- segData$Cell
+class <- segData$Class
+case <- segData$Case
+segData <- segData[, -(1:3)]  # drop cols
+
+statusColNum <- grep("Status", names(segData))  # binary versions of predictors
+segData <- segData[, -statusColNum]
+skewValues <- apply(segData, 2, skewness)
+head(skewValues)
+
+# Box Cox Transform
+Ch1AreaTrans <- BoxCoxTrans(segData$AreaCh1)
+Ch1AreaTrans
+head(segData$AreaCh1)
+predict(Ch1AreaTrans, head(segData$AreaCh1))
+
+# PCA using base R
+pcaObject <- prcomp(segData,
+                    center = TRUE, scale. = TRUE)
+percentVariance <- pcaObject$sdev^2/sum(pcaObject$sdev^2)*100
+percentVariance[1:3]  # pct var explained
+head(pcaObject$x[, 1:5])  # transformed object
+head(pcaObject$rotation[, 1:3])  # loadings
+
+# pre-processing with caret
+trans <- preProcess(segData,
+                    method = c("BoxCox", "center", "scale", "pca"))
+trans
+transformed <- predict(trans, segData)
+head(transformed)
+nearZeroVar(segData)
+
+correlations <- cor(segData)
+correlations[1:4, 1:4]
+#corrplot(correlations, order = "hclust")
+
+highCorr <- findCorrelation(correlations, cutoff = 0.75)
+length(highCorr)
+head(highCorr)
+filteredSegData <- segData[, -highCorr]
+```
+
+
+### Chapter 4: Over-Fitting and Model Tuning
+
+```{r, message=FALSE, warning=FALSE}
+rm(list=ls())
+require(AppliedPredictiveModeling)
+require(caret)
+#require(Design)  # replaced with rms
+require(rms)
+require(e1071)
+require(ipred)
+require(MASS)
+
+data(twoClassData)
+str(predictors)
+str(classes)
+
+# data splitting
+set.seed(1)
+trainingRows <- createDataPartition(classes, p = 0.8, list = FALSE)
+head(trainingRows)
+trainPredictors <- predictors[trainingRows,]
+trainClasses <- classes[trainingRows]  # not a dataframe, just vector
+testPredictors <- predictors[-trainingRows,]
+testClasses <- classes[-trainingRows]
+
+str(trainPredictors)
+str(testPredictors)
+# caret fn 'maxdissim' generates test set using max dissimilarity sampling
+
+# resampling
+# - repeated training/test splits
+set.seed(1)
+repeatedSplits <- createDataPartition(trainClasses, p = 0.8, times = 3)
+str(repeatedSplits)
+# - k-fold CV
+set.seed(1)
+cvSplits <- createFolds(trainClasses, k = 10, returnTrain = TRUE)
+str(cvSplits)
+cvPredictors1 <- trainPredictors[cvSplits[[1]],]
+cvClasses1 <- trainClasses[cvSplits[[1]]]
+nrow(cvPredictors1)/nrow(trainPredictors)
+# - bootstrapping: createResamples
+# - repeated CV: createMultiFolds
+
+# model building
+# using formula interface w large data can by unnecessarily slow
+# - using knn3 from caret
+trainPredictors <- as.matrix(trainPredictors)
+knnFit <- knn3(x = trainPredictors, y = trainClasses, k = 5)
+knnFit
+testPredictions <- predict(knnFit, newdata = testPredictors, type = "class")
+head(testPredictions)
+
+# determining tuning parameters
+rm(list=ls())
+data("GermanCredit")
+set.seed(1056)
+trainingRows <- createDataPartition(GermanCredit$Class, p = 0.8, list = FALSE)
+GermanCreditTrain <- GermanCredit[trainingRows, -(1:9)]  # drop first 9 cols
+dropZeroVar <- nearZeroVar(GermanCreditTrain)
+GermanCreditTrain <- GermanCreditTrain[, -dropZeroVar]
+GermanCreditTest <- GermanCredit[-trainingRows, -(1:9)]  # drop first 9 cols
+GermanCreditTest <- GermanCreditTest[, -dropZeroVar]
+svmFit <- train(Class ~.,
+                data = GermanCreditTrain,
+                method = "svmRadial",
+                preProc = c("center", "scale"),
+                tuneLength = 10,  # evals 2^(-2) to 2^7
+                trControl = trainControl(method = "repeatedcv", repeats = 5)) 
+svmFit
+plot(svmFit, scales = list(x = list(log = 2)))
+#predictedProbs <- predict(svmFit, newdata = GermanCreditTest, type = "prob")  # see errata
+
+# between model comparison
+set.seed(1056)
+logisticReg <- train(Class ~.,
+                     data = GermanCreditTrain,
+                     method = "glm",
+                     trControl = trainControl(method = "repeatedcv", repeats =5))
+logisticReg  # need to remove extra cols for one hot encoding? not going to bother for notes
+resamp <- resamples(list(SVM = svmFit, Logistic = logisticReg))
+summary(resamp)
+?xyplot.resamples
+modelDifferences <- diff(resamp)
+summary(modelDifferences)
+# small values for SVM mean small p vals so possible that models are really different
+```
+

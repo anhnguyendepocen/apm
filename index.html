@@ -11,7 +11,7 @@
 
 
 
-<title>Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Notes</title>
+<title>APM Notes</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -278,6 +278,27 @@ div.tocify {
         <li>
   <a href="index.html">Notes</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Computation
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="general-strategies.html">General Strategies</a>
+    </li>
+    <li>
+      <a href="regression-models.html">Regression Models</a>
+    </li>
+    <li>
+      <a href="classification-models.html">Classification Models</a>
+    </li>
+    <li>
+      <a href="other-considerations.html">Other Considerations</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="solutions.html">Solutions</a>
 </li>
@@ -293,15 +314,15 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Notes</h1>
+<h1 class="title toc-ignore">APM Notes</h1>
 
 </div>
 
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<div id="chapter-1" class="section level3">
-<h3>Chapter 1</h3>
+<div id="chapter-1-introduction" class="section level3">
+<h3>Chapter 1: Introduction</h3>
 <p>Data characteristics to evaluate</p>
 <ul>
 <li>Response
@@ -326,23 +347,18 @@ div.tocify {
 </div>
 <div id="general-strategies" class="section level2">
 <h2>General Strategies</h2>
-<div id="chapter-2" class="section level3">
-<h3>Chapter 2</h3>
+<div id="chapter-2-a-short-tour-of-the-predictive-modeling-process" class="section level3">
+<h3>Chapter 2: A Short Tour of the Predictive Modeling Process</h3>
 <p>n/a</p>
 </div>
-<div id="chapter-3" class="section level3">
-<h3>Chapter 3</h3>
+<div id="chapter-3-data-pre-processing" class="section level3">
+<h3>Chapter 3: Data Pre-Processing</h3>
 <ul>
 <li><strong>Centering</strong>: subtract average value so that predictors have 0 mean</li>
 <li><strong>Scaling</strong>: divide by standard deviation so predictors all have sd of 1</li>
 </ul>
 <p>For <strong>skewness</strong>, general rule of thumb is if ratio of highest value to lowest value is greater than 20, there is significant skewness. If using the skewness statistic, a symmetric distribution will have a skewness value close to 0, right skewed distributions have a positive statistic and left skewed distributions have a negative statistic.</p>
 <p>Transforming data with log, square root, or inverse could remove skewness.</p>
-<pre class="r"><code>library(AppliedPredictiveModeling)
-library(e1071)
-data(&quot;segmentationOriginal&quot;)
-#apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))
-# can&#39;t match the 2.39 from book</code></pre>
 <p><strong>Box-Cox Transformation</strong></p>
 <p>This can be applied independently to each predictor that contains values &gt; 0.</p>
 <p><span class="math display">\[x^{*} = \left\{\begin{matrix}
@@ -380,132 +396,9 @@ log(x), &amp; \lambda = 0 \end{matrix}\right.\]</span></p>
 </ul></li>
 <li>could remove min # of predictors so that pairwise correlations are below some threshold (e.g. 0.75)</li>
 </ul>
-<pre class="r"><code>library(AppliedPredictiveModeling)
-library(e1071)
-library(caret)
-library(corrplot)
-data(&quot;segmentationOriginal&quot;)
-segData &lt;- subset(segmentationOriginal, Case == &quot;Train&quot;)
-cellID &lt;- segData$Cell
-class &lt;- segData$Class
-case &lt;- segData$Case
-segData &lt;- segData[, -(1:3)]  # drop cols
-
-statusColNum &lt;- grep(&quot;Status&quot;, names(segData))  # binary versions of predictors
-segData &lt;- segData[, -statusColNum]
-skewValues &lt;- apply(segData, 2, skewness)
-head(skewValues)</code></pre>
-<pre><code>##    AngleCh1     AreaCh1 AvgIntenCh1 AvgIntenCh2 AvgIntenCh3 AvgIntenCh4 
-## -0.02426252  3.52510745  2.95918524  0.84816033  2.20234214  1.90047128</code></pre>
-<pre class="r"><code># Box Cox Transform
-Ch1AreaTrans &lt;- BoxCoxTrans(segData$AreaCh1)
-Ch1AreaTrans</code></pre>
-<pre><code>## Box-Cox Transformation
-## 
-## 1009 data points used to estimate Lambda
-## 
-## Input data summary:
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   150.0   194.0   256.0   325.1   376.0  2186.0 
-## 
-## Largest/Smallest: 14.6 
-## Sample Skewness: 3.53 
-## 
-## Estimated Lambda: -0.9</code></pre>
-<pre class="r"><code>head(segData$AreaCh1)</code></pre>
-<pre><code>## [1] 819 431 298 256 258 358</code></pre>
-<pre class="r"><code>predict(Ch1AreaTrans, head(segData$AreaCh1))</code></pre>
-<pre><code>## [1] 1.108458 1.106383 1.104520 1.103554 1.103607 1.105523</code></pre>
-<pre class="r"><code># PCA using base R
-pcaObject &lt;- prcomp(segData,
-                    center = TRUE, scale. = TRUE)
-percentVariance &lt;- pcaObject$sdev^2/sum(pcaObject$sdev^2)*100
-percentVariance[1:3]  # pct var explained</code></pre>
-<pre><code>## [1] 20.91236 17.01330 11.88689</code></pre>
-<pre class="r"><code>head(pcaObject$x[, 1:5])  # transformed object</code></pre>
-<pre><code>##           PC1        PC2         PC3       PC4        PC5
-## 2   5.0985749  4.5513804 -0.03345155 -2.640339  1.2783212
-## 3  -0.2546261  1.1980326 -1.02059569 -3.731079  0.9994635
-## 4   1.2928941 -1.8639348 -1.25110461 -2.414857 -1.4914838
-## 12 -1.4646613 -1.5658327  0.46962088 -3.388716 -0.3302324
-## 15 -0.8762771 -1.2790055 -1.33794261 -3.516794  0.3936099
-## 16 -0.8615416 -0.3286842 -0.15546723 -2.206636  1.4731658</code></pre>
-<pre class="r"><code>head(pcaObject$rotation[, 1:3])  # loadings</code></pre>
-<pre><code>##                      PC1         PC2          PC3
-## AngleCh1     0.001213758 -0.01284461  0.006816473
-## AreaCh1      0.229171873  0.16061734  0.089811727
-## AvgIntenCh1 -0.102708778  0.17971332  0.067696745
-## AvgIntenCh2 -0.154828672  0.16376018  0.073534399
-## AvgIntenCh3 -0.058042158  0.11197704 -0.185473286
-## AvgIntenCh4 -0.117343465  0.21039086 -0.105060977</code></pre>
-<pre class="r"><code># pre-processing with caret
-trans &lt;- preProcess(segData,
-                    method = c(&quot;BoxCox&quot;, &quot;center&quot;, &quot;scale&quot;, &quot;pca&quot;))
-trans</code></pre>
-<pre><code>## Created from 1009 samples and 58 variables
-## 
-## Pre-processing:
-##   - Box-Cox transformation (47)
-##   - centered (58)
-##   - ignored (0)
-##   - principal component signal extraction (58)
-##   - scaled (58)
-## 
-## Lambda estimates for Box-Cox transformation:
-##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-## -2.00000 -0.50000 -0.10000  0.05106  0.30000  2.00000 
-## 
-## PCA needed 19 components to capture 95 percent of the variance</code></pre>
-<pre class="r"><code>transformed &lt;- predict(trans, segData)
-head(transformed)</code></pre>
-<pre><code>##           PC1        PC2        PC3       PC4        PC5        PC6
-## 2   1.5684742  6.2907855 -0.3333299 -3.063327 -1.3415782  0.3933609
-## 3  -0.6664055  2.0455375 -1.4416841 -4.701183 -1.7422020  0.4313114
-## 4   3.7500055 -0.3915610 -0.6690260 -4.020753  1.7927777 -0.8542507
-## 12  0.3768509 -2.1897554  1.4380167 -5.327116 -0.4066757  1.1092318
-## 15  1.0644951 -1.4646516 -0.9900478 -5.627351 -0.8650174  0.1070749
-## 16 -0.3798629  0.2173028  0.4387980 -2.069880 -1.9363920 -0.3696683
-##            PC7        PC8       PC9        PC10        PC11       PC12
-## 2  -1.31779481 -1.8965728 0.7111801  0.16193272  1.44061816 -0.6647078
-## 3   1.28450248 -3.0829008 1.9973303  0.58665039  0.80080447  1.4480935
-## 4  -0.07092724 -0.5997223 0.9873784 -0.47230884  1.22229470  1.1277348
-## 12  0.70231874 -0.9667673 0.4970412 -0.10925035  1.59963522 -0.6665738
-## 15  0.49640237 -0.6569112 0.4917103 -0.01652356  0.01154796 -0.7153114
-## 16  0.01207458 -1.2991267 0.8748767 -0.28802701 -0.32026720  1.3544711
-##           PC13       PC14         PC15         PC16         PC17
-## 2  -0.50341167 -0.5251037  0.209541528  0.001408739  0.783699478
-## 3   0.44875803 -0.4299460 -0.610433146 -1.058349329 -0.791062674
-## 4  -1.37477652 -1.4884756 -0.712689953 -0.359746977 -0.002913506
-## 12 -1.26751477 -0.2010528  0.135890457 -1.125603114 -0.025376331
-## 15 -0.06833084 -0.2925842  0.003031988 -0.046983964 -0.678036827
-## 16 -0.68148834  0.3984937 -1.948861159 -0.746533391  1.413093003
-##           PC18        PC19
-## 2  -0.55515083  0.68129112
-## 3   0.06569274  0.14157724
-## 4   1.35736326  0.10187098
-## 12 -0.63185874 -0.96813663
-## 15 -0.58461317  0.05084857
-## 16 -1.96291699  0.73874900</code></pre>
-<pre class="r"><code>nearZeroVar(segData)</code></pre>
-<pre><code>## integer(0)</code></pre>
-<pre class="r"><code>correlations &lt;- cor(segData)
-correlations[1:4, 1:4]</code></pre>
-<pre><code>##                 AngleCh1      AreaCh1 AvgIntenCh1 AvgIntenCh2
-## AngleCh1     1.000000000 -0.002627172 -0.04300776 -0.01944681
-## AreaCh1     -0.002627172  1.000000000 -0.02529739 -0.15330301
-## AvgIntenCh1 -0.043007757 -0.025297394  1.00000000  0.52521711
-## AvgIntenCh2 -0.019446810 -0.153303007  0.52521711  1.00000000</code></pre>
-<pre class="r"><code>#corrplot(correlations, order = &quot;hclust&quot;)
-
-highCorr &lt;- findCorrelation(correlations, cutoff = 0.75)
-length(highCorr)</code></pre>
-<pre><code>## [1] 32</code></pre>
-<pre class="r"><code>head(highCorr)</code></pre>
-<pre><code>## [1] 23 40 43 36  7 15</code></pre>
-<pre class="r"><code>filteredSegData &lt;- segData[, -highCorr]</code></pre>
 </div>
-<div id="chapter-4" class="section level3">
-<h3>Chapter 4</h3>
+<div id="chapter-4-over-fitting-and-model-tuning" class="section level3">
+<h3>Chapter 4: Over-Fitting and Model Tuning</h3>
 <ul>
 <li><strong>apparent</strong> performance is using training set to predict model performance</li>
 <li><strong>tuning parameters</strong> are model params that can’t be estimated with formulas (number of neighbors in a KNN classification model)</li>
@@ -581,206 +474,12 @@ length(highCorr)</code></pre>
 <li>use the simplest model that reasonably approximates performance of complex models</li>
 </ol>
 <p>A <strong>paired t-test</strong> can be used to evaluate if there are statistically significant differences in model performance.</p>
-<pre class="r"><code>rm(list=ls())
-library(AppliedPredictiveModeling)
-library(caret)
-#library(Design)  # replaced with rms
-library(rms)
-library(e1071)
-library(ipred)
-library(MASS)
-
-data(twoClassData)
-str(predictors)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    208 obs. of  2 variables:
-##  $ PredictorA: num  0.158 0.655 0.706 0.199 0.395 ...
-##  $ PredictorB: num  0.1609 0.4918 0.6333 0.0881 0.4152 ...</code></pre>
-<pre class="r"><code>str(classes)</code></pre>
-<pre><code>##  Factor w/ 2 levels &quot;Class1&quot;,&quot;Class2&quot;: 2 2 2 2 2 2 2 2 2 2 ...</code></pre>
-<pre class="r"><code># data splitting
-set.seed(1)
-trainingRows &lt;- createDataPartition(classes, p = 0.8, list = FALSE)
-head(trainingRows)</code></pre>
-<pre><code>##      Resample1
-## [1,]         1
-## [2,]         2
-## [3,]         3
-## [4,]         4
-## [5,]         5
-## [6,]         6</code></pre>
-<pre class="r"><code>trainPredictors &lt;- predictors[trainingRows,]
-trainClasses &lt;- classes[trainingRows]  # not a dataframe, just vector
-testPredictors &lt;- predictors[-trainingRows,]
-testClasses &lt;- classes[-trainingRows]
-
-str(trainPredictors)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    167 obs. of  2 variables:
-##  $ PredictorA: num  0.158 0.655 0.706 0.199 0.395 ...
-##  $ PredictorB: num  0.1609 0.4918 0.6333 0.0881 0.4152 ...</code></pre>
-<pre class="r"><code>str(testPredictors)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    41 obs. of  2 variables:
-##  $ PredictorA: num  0.0658 0.1056 0.2909 0.4129 0.0472 ...
-##  $ PredictorB: num  0.1786 0.0801 0.3021 0.2869 0.0414 ...</code></pre>
-<pre class="r"><code># caret fn &#39;maxdissim&#39; generates test set using max dissimilarity sampling
-
-# resampling
-# - repeated training/test splits
-set.seed(1)
-repeatedSplits &lt;- createDataPartition(trainClasses, p = 0.8, times = 3)
-str(repeatedSplits)</code></pre>
-<pre><code>## List of 3
-##  $ Resample1: int [1:135] 1 2 4 5 6 8 9 10 11 12 ...
-##  $ Resample2: int [1:135] 2 3 4 6 7 8 9 11 14 15 ...
-##  $ Resample3: int [1:135] 4 5 6 7 8 9 11 13 14 15 ...</code></pre>
-<pre class="r"><code># - k-fold CV
-set.seed(1)
-cvSplits &lt;- createFolds(trainClasses, k = 10, returnTrain = TRUE)
-str(cvSplits)</code></pre>
-<pre><code>## List of 10
-##  $ Fold01: int [1:151] 2 3 4 5 6 7 11 12 13 14 ...
-##  $ Fold02: int [1:150] 1 2 3 4 5 6 7 8 9 10 ...
-##  $ Fold03: int [1:150] 1 2 3 4 5 6 7 8 9 10 ...
-##  $ Fold04: int [1:151] 1 2 3 4 5 7 8 9 10 11 ...
-##  $ Fold05: int [1:150] 1 2 3 5 6 7 8 9 10 11 ...
-##  $ Fold06: int [1:150] 1 2 3 4 5 6 8 9 10 11 ...
-##  $ Fold07: int [1:150] 1 3 4 5 6 7 8 9 10 11 ...
-##  $ Fold08: int [1:151] 1 2 3 4 5 6 7 8 9 10 ...
-##  $ Fold09: int [1:150] 1 2 4 5 6 7 8 9 10 12 ...
-##  $ Fold10: int [1:150] 1 2 3 4 6 7 8 9 10 11 ...</code></pre>
-<pre class="r"><code>cvPredictors1 &lt;- trainPredictors[cvSplits[[1]],]
-cvClasses1 &lt;- trainClasses[cvSplits[[1]]]
-nrow(cvPredictors1)/nrow(trainPredictors)</code></pre>
-<pre><code>## [1] 0.9041916</code></pre>
-<pre class="r"><code># - bootstrapping: createResamples
-# - repeated CV: createMultiFolds
-
-# model building
-# using formula interface w large data can by unnecessarily slow
-# - using knn3 from caret
-trainPredictors &lt;- as.matrix(trainPredictors)
-knnFit &lt;- knn3(x = trainPredictors, y = trainClasses, k = 5)
-knnFit</code></pre>
-<pre><code>## 5-nearest neighbor model
-## Training set outcome distribution:
-## 
-## Class1 Class2 
-##     89     78</code></pre>
-<pre class="r"><code>testPredictions &lt;- predict(knnFit, newdata = testPredictors, type = &quot;class&quot;)
-head(testPredictions)</code></pre>
-<pre><code>## [1] Class2 Class2 Class1 Class1 Class2 Class2
-## Levels: Class1 Class2</code></pre>
-<pre class="r"><code># determining tuning parameters
-rm(list=ls())
-data(&quot;GermanCredit&quot;)
-set.seed(1056)
-trainingRows &lt;- createDataPartition(GermanCredit$Class, p = 0.8, list = FALSE)
-GermanCreditTrain &lt;- GermanCredit[trainingRows, -(1:9)]  # drop first 9 cols
-dropZeroVar &lt;- nearZeroVar(GermanCreditTrain)
-GermanCreditTrain &lt;- GermanCreditTrain[, -dropZeroVar]
-GermanCreditTest &lt;- GermanCredit[-trainingRows, -(1:9)]  # drop first 9 cols
-GermanCreditTest &lt;- GermanCreditTest[, -dropZeroVar]
-svmFit &lt;- train(Class ~.,
-                data = GermanCreditTrain,
-                method = &quot;svmRadial&quot;,
-                preProc = c(&quot;center&quot;, &quot;scale&quot;),
-                tuneLength = 10,  # evals 2^(-2) to 2^7
-                trControl = trainControl(method = &quot;repeatedcv&quot;, repeats = 5)) 
-svmFit</code></pre>
-<pre><code>## Support Vector Machines with Radial Basis Function Kernel 
-## 
-## 800 samples
-##  41 predictor
-##   2 classes: &#39;Bad&#39;, &#39;Good&#39; 
-## 
-## Pre-processing: centered (41), scaled (41) 
-## Resampling: Cross-Validated (10 fold, repeated 5 times) 
-## Summary of sample sizes: 720, 720, 720, 720, 720, 720, ... 
-## Resampling results across tuning parameters:
-## 
-##   C       Accuracy  Kappa    
-##     0.25  0.70000   0.0000000
-##     0.50  0.71325   0.0978653
-##     1.00  0.74350   0.2819257
-##     2.00  0.75875   0.3601013
-##     4.00  0.75550   0.3685613
-##     8.00  0.73575   0.3395050
-##    16.00  0.71375   0.2980955
-##    32.00  0.69175   0.2562410
-##    64.00  0.67950   0.2313896
-##   128.00  0.67225   0.2150734
-## 
-## Tuning parameter &#39;sigma&#39; was held constant at a value of 0.0141941
-## Accuracy was used to select the optimal model using the largest value.
-## The final values used for the model were sigma = 0.0141941 and C = 2.</code></pre>
-<pre class="r"><code>plot(svmFit, scales = list(x = list(log = 2)))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
-<pre class="r"><code>#predictedProbs &lt;- predict(svmFit, newdata = GermanCreditTest, type = &quot;prob&quot;)  # see errata
-
-# between model comparison
-set.seed(1056)
-logisticReg &lt;- train(Class ~.,
-                     data = GermanCreditTrain,
-                     method = &quot;glm&quot;,
-                     trControl = trainControl(method = &quot;repeatedcv&quot;, repeats =5))
-logisticReg  # need to remove extra cols for one hot encoding? not going to bother for notes</code></pre>
-<pre><code>## Generalized Linear Model 
-## 
-## 800 samples
-##  41 predictor
-##   2 classes: &#39;Bad&#39;, &#39;Good&#39; 
-## 
-## No pre-processing
-## Resampling: Cross-Validated (10 fold, repeated 5 times) 
-## Summary of sample sizes: 720, 720, 720, 720, 720, 720, ... 
-## Resampling results:
-## 
-##   Accuracy  Kappa    
-##   0.73025   0.3064704</code></pre>
-<pre class="r"><code>resamp &lt;- resamples(list(SVM = svmFit, Logistic = logisticReg))
-summary(resamp)</code></pre>
-<pre><code>## 
-## Call:
-## summary.resamples(object = resamp)
-## 
-## Models: SVM, Logistic 
-## Number of resamples: 50 
-## 
-## Accuracy 
-##           Min.  1st Qu. Median    Mean  3rd Qu.  Max. NA&#39;s
-## SVM      0.675 0.728125 0.7625 0.75875 0.787500 0.825    0
-## Logistic 0.625 0.700000 0.7250 0.73025 0.759375 0.800    0
-## 
-## Kappa 
-##               Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA&#39;s
-## SVM      0.1666667 0.2843344 0.3457102 0.3601013 0.4594595 0.5512821    0
-## Logistic 0.0625000 0.2500000 0.3002137 0.3064704 0.3845504 0.5121951    0</code></pre>
-<pre class="r"><code>?xyplot.resamples
-modelDifferences &lt;- diff(resamp)
-summary(modelDifferences)</code></pre>
-<pre><code>## 
-## Call:
-## summary.diff.resamples(object = modelDifferences)
-## 
-## p-value adjustment: bonferroni 
-## Upper diagonal: estimates of the difference
-## Lower diagonal: p-value for H0: difference = 0
-## 
-## Accuracy 
-##          SVM      Logistic
-## SVM               0.0285  
-## Logistic 0.001231         
-## 
-## Kappa 
-##          SVM     Logistic
-## SVM              0.05363 
-## Logistic 0.02288</code></pre>
-<pre class="r"><code># small values for SVM mean small p vals so possible that models are really different</code></pre>
 </div>
 </div>
 <div id="regression-models" class="section level2">
 <h2>Regression Models</h2>
-<div id="chapter-5" class="section level3">
-<h3>Chapter 5</h3>
+<div id="chapter-5-measuring-performance-in-regression-models" class="section level3">
+<h3>Chapter 5: Measuring Performance in Regression Models</h3>
 <p><strong>Quantitative Performance Measures</strong></p>
 <ul>
 <li>RMSE is most common</li>
@@ -803,7 +502,7 @@ summary(modelDifferences)</code></pre>
 </ul></li>
 </ul>
 <p><strong>Variance-Bias Trade-off</strong></p>
-<p>Expected value of MSe is equal to irreducible noise plus squared bias plus model variance.</p>
+<p>Expected value of MSE is equal to irreducible noise plus squared bias plus model variance.</p>
 <ul>
 <li>Model bias is how close model form can reflect true relationship between predictors and outcome</li>
 <li>Model variance reflects how much model parameters will change if predictors change
@@ -812,89 +511,260 @@ summary(modelDifferences)</code></pre>
 </ul></li>
 </ul>
 <p><span class="math display">\[E[MSE] = \sigma^{2} + (Model Bias)^{2} + Model Variance\]</span></p>
-<pre class="r"><code>rm(list=ls())
-observed &lt;-  c(0.22, 0.83,-0.12, 0.89,-0.23,-1.30,-0.15,-1.4,
-               0.62, 0.99,-0.18, 0.32, 0.34,-0.30, 0.04,-0.87,
-               0.55,-1.30,-1.15, 0.20)
-predicted &lt;- c(0.24, 0.78,-0.66, 0.53, 0.70,-0.75,-0.41,-0.43,
-               0.49, 0.79,-1.19, 0.06, 0.75,-0.07, 0.43,-0.42,
-              -0.25,-0.64,-1.26,-0.07)
-residualValues &lt;- observed - predicted
-summary(residualValues)</code></pre>
-<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-## -0.9700 -0.4200  0.0800 -0.0310  0.2625  1.0100</code></pre>
-<pre class="r"><code># observed versus predicted
-axisRange &lt;- extendrange(c(observed, predicted))
-plot(observed, predicted, ylim = axisRange, xlim = axisRange)
-abline(0, 1, col = &quot;darkgrey&quot;, lty = 2)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
-<pre class="r"><code># predicted versus residuals
-plot(predicted, residualValues, ylab = &quot;residual&quot;)
-abline(h = 0, col = &quot;darkgrey&quot;, lty = 2)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-23-2.png" width="672" /></p>
-<pre class="r"><code># quantitative model performance measures
-require(caret)
-R2(predicted, observed)</code></pre>
-<pre><code>## [1] 0.5170123</code></pre>
-<pre class="r"><code>RMSE(predicted, observed)</code></pre>
-<pre><code>## [1] 0.5234883</code></pre>
-<pre class="r"><code>cor(predicted, observed)  # base R simple correlation</code></pre>
-<pre><code>## [1] 0.7190357</code></pre>
-<pre class="r"><code>cor(predicted, observed)^2  # match R^2</code></pre>
-<pre><code>## [1] 0.5170123</code></pre>
-<pre class="r"><code>cor(predicted, observed, method = &quot;spearman&quot;)  # rank correlation</code></pre>
-<pre><code>## [1] 0.7554552</code></pre>
 </div>
-<div id="chapter-6" class="section level3">
-<h3>Chapter 6</h3>
+<div id="chapter-6-linear-regression-and-its-cousins" class="section level3">
+<h3>Chapter 6: Linear Regression and Its Cousins</h3>
+<ul>
+<li>ordinary linear regression finds parameter estimates that minimize bias
+<ul>
+<li>objective is to minimize sum of squared errors</li>
+</ul></li>
+<li>ridge, lasso, and elastic net find estimates that have lower variance</li>
+</ul>
+<p>Benefits of linear regression type models</p>
+<ul>
+<li>predictor changes are easiliy interpretable</li>
+<li>relationship among predictors is easily interpretable</li>
+<li>mathematical nature allows for standard error computations
+<ul>
+<li>can assess statistical significance of each predictor, but need to make assumptions about residual distribution</li>
+</ul></li>
+</ul>
+<p>Drawbacks of linear regression type models</p>
+<ul>
+<li>solution may not be linear in parameters</li>
+<li>sensitive to outliers bc SSE is minimized
+<ul>
+<li>can use MAE or Huber function instead (Huber uses squared residuals under a threshold and simple difference above threshold)</li>
+</ul></li>
+</ul>
+<p><strong>Linear Regression</strong></p>
+<p><span class="math display">\[\hat{\beta} = (X^{T}X)^{-1}X^{T}y\]</span></p>
+<ul>
+<li>inverse of <span class="math inline">\((X^{T}X)\)</span> exists when:
+<ul>
+<li>no predictor can be determined from a combo of other predictors
+<ul>
+<li>removing pairwise correlated predictors does not eliminate predictors that are functions of 2+ predictors</li>
+<li>use variance inflation factor to diagnose multicollinearity</li>
+</ul></li>
+<li>number of samples is greater than number of predictors</li>
+</ul></li>
+</ul>
+<p><strong>Partial Least Squares</strong></p>
+<ul>
+<li>pre-processing predictors with PCA before regression is called PCR
+<ul>
+<li>drawback is that PCA does not consider response, so if variability of predictors is unrelated to variability of response then regression will not be good
+<ul>
+<li>PLS is recommended when there are correlated predictors and want a linear regression type model</li>
+</ul></li>
+</ul></li>
+<li>PLS finds components that maximally summarize variation of predictors while also requiring components to have max correlation with response
+<ul>
+<li>iterative process of calculating weights (w), scores (t), and loadings (p)
+<ul>
+<li>w: relationship b/w predictor and response, signals predictor importance in VIP (variable importance in the projection)</li>
+<li>t: predictor orthongonally projected onto direction</li>
+<li>p: correlation between scores (t) and original predictors</li>
+<li>at end of iteration, current estimates are subtracted from predictors and responses</li>
+</ul></li>
+<li>can be thought of like supervised dimension reduction</li>
+<li>predictors should be centered and scaled before PLS, similar to PCA</li>
+<li>has one tuning parameter: number of components</li>
+<li>squared VIP values sum to number of predictors
+<ul>
+<li>general rule of thumb is if VIP &gt; 1 then predictor has predictive info for response</li>
+<li>predictors with small PLS regression coef and small VIP are likely not important for model</li>
+</ul></li>
+<li>algo has been improved upon many times, though other models are still recommended for nonlinear relationships b/w predictors and response instead of augmenting PLS</li>
+</ul></li>
+<li>in practice, PCR and PLS produce models with similar performance but PCR needs to retain more components</li>
+</ul>
+<p><strong>Penalized Models</strong></p>
+<ul>
+<li>OLS coef are unbiased and has lowest variance of unbiased linear models</li>
+<li>common that small increase in bias will lower var significantly, thus reducing MSE
+<ul>
+<li>correlation can lead to large variance</li>
+<li>biased models that deal w collinearity better can have better MSE than OLS</li>
+</ul></li>
+<li>one way to create biased model is by using penalty
+<ul>
+<li>since penalty is applied to coefficients, they should be on the same scale so predictors should be centered and scaled</li>
+<li>when model overfits or coef are inflated bc of collinearity, can add penalty to SSE if estimates are large</li>
+<li>ridge regression adds penalty to the sum of squared regression parameters
+<ul>
+<li>L2: second order penalty</li>
+</ul></li>
+<li>lasso (least absolute shrinkage and selection) adds penalty to abs value of regression parameters
+<ul>
+<li>L1: first order penalty</li>
+<li>also does feature selection bc some betas are set to 0, unliked ridge</li>
+</ul></li>
+<li>LARS (least angle regression) includes lasso and similar models</li>
+<li>elastic net combines ridge and lasso penalties (different lambdas)
+<ul>
+<li>combines effective regularization of ridge and feature selection of lasso</li>
+<li>might more effectively deal w groups of correlated vars</li>
+</ul></li>
+</ul></li>
+</ul>
 </div>
-<div id="chapter-7" class="section level3">
-<h3>Chapter 7</h3>
+<div id="chapter-7-nonlinear-regression-models" class="section level3">
+<h3>Chapter 7: Nonlinear Regression Models</h3>
+<ul>
+<li>linear models can handle non linearity but must know nature of nonlinearity to manually adjust</li>
+</ul>
+<p><strong>Neural Networks</strong></p>
+<ul>
+<li>hidden layer is a linear combo of predictors, but typically transformed by nonlinear function (i.e. sigmoidal)</li>
+<li>output is a linear combo of hidden layer units</li>
+<li>coef are unlikely to present coherent info bc there are no constraints to defining the linear combo (unlike PLS)</li>
+<li>total params estimates are <span class="math inline">\(H(P+1)+H+1\)</span></li>
+<li>challenging optimization problem bc of number of params
+<ul>
+<li>back propagation is an efficient method of using derivatives, but soln is often not a global one</li>
+<li>tendency to overfit
+<ul>
+<li>can address with early stopping method to halt when error rate increases, however, errors have uncertainty</li>
+<li>can also use regularization (weight decay) and add penalty to coefficients (<strong>lambda is usually b/w 0 and 0.1</strong>)</li>
+<li>bc models can be unstable (finds local optimal solution), several models can be averaged, this has a large positive fefect on neural networks</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Multivariate Adaptive Regression Splines (MARS)</strong></p>
+<ul>
+<li>creates new features from one or two predictors by finding a breakpoint for which one side is 0 until breakpoint and the other is 0 after breakpoint
+<ul>
+<li>each predictor is evaluated for breakpoint by minimized error
+<ul>
+<li>additional features are evaluated on top of prior features until a stopping point is reached</li>
+<li>hinge functions are typically written as <span class="math inline">\(h(x-a)\)</span> (nonzero when <span class="math inline">\(x&gt;a\)</span>) and <span class="math inline">\(h(a-x)\)</span> (nonzero when <span class="math inline">\(x&lt;a\)</span>)</li>
+<li>this wouldn’t be done for binary predictors</li>
+</ul></li>
+<li>becomes a piecewise linear model</li>
+</ul></li>
+<li>after creating full set of features, features are pruned if they don’t significantly reduce error rate using leave one out CV approximation
+<ul>
+<li>process does not proceed backwards from feature creation</li>
+</ul></li>
+<li>second degree MARS does the same search for single predictor breakpoints and then searches for new cuts to couple with original features
+<ul>
+<li>in practice, have seen second degree or higher MARS produce have instabilities where a few samples predictions are wildly inaccurate
+<ul>
+<li>this has not been observed with additive MARS models</li>
+</ul></li>
+</ul></li>
+<li>two tuning parameters: degree of features added, number of retained terms</li>
+<li>advantages of using MARS
+<ul>
+<li>automatically does feature selection
+<ul>
+<li>model equation is independent of predictors that are not involved with any final model features</li>
+</ul></li>
+<li>very interpretable</li>
+<li>requires little pre-processing
+<ul>
+<li>MARS is okay if there are correlated variables, but strong correlations will hurt interpretability</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Support Vector Machines</strong></p>
+<ul>
+<li>drawback of minimizing SSE is that models are sensitive to outliers
+<ul>
+<li>alternative is to use Huber function, where residuals are squared for small values else use absolute values</li>
+<li>SVM is similar in that user selects a threshold and residuals within threshold do not contribute to error and above threshold contribute a linear scale amount
+<ul>
+<li>squared residuals are not used, so less sensitive to outliers</li>
+<li>if threshold is high, outliers determine the regression</li>
+</ul></li>
+</ul></li>
+<li>SVM has to fit number of parameters on scale of sample size
+<ul>
+<li>regularization helps over-parameterization</li>
+<li>training data is required to make new predictions
+<ul>
+<li>when training data is large, SVM can be time consuming, unless many samples have <span class="math inline">\(\alpha=0\)</span> due to cost penalty</li>
+</ul></li>
+</ul></li>
+<li>cost penalty is applied to residuals, lower cost leads to underfitting</li>
+<li>SVM can have different kernels: linear, polynomial, radial, hyperbolic
+<ul>
+<li>using kernel functions can introduce new parameters
+<ul>
+<li>for radial kernel, can estimate scale parameter with shortcut</li>
+</ul></li>
+<li>in practice radial kernel does quite well, unless true relationship is linear</li>
+</ul></li>
+<li>in practice, cost parameter provides more flexibility for model tuning, so recommend fixing epsilon and tuning over kernel parameters</li>
+<li>predictors should be centered and scaled bc they enter model as sum of cross products</li>
+<li>relevance vector machine is a bayesian analog to SVM</li>
+</ul>
+<p><strong>K-Nearest Neighbors</strong></p>
+<ul>
+<li>user defines distance measure
+<ul>
+<li>Euclidean distance (straight line) is most common</li>
+<li>Minkowski distance is a generalization of Euclidean distance (handles higher dimensions)</li>
+</ul></li>
+<li>predictors should be centered and scaled to prevent predictors with larger scales biasing results</li>
+<li>distance computation requires non-missing values
+<ul>
+<li>can exclude missing values or impute with naive estimator (e.g. mean)</li>
+</ul></li>
+<li>ideal K can be selection through resampling
+<ul>
+<li>small K’s overfit and large K’s underfit</li>
+</ul></li>
+<li>problems include computation time (distance calc requires entire sample to be in memory) and disconnect between local structure and predictive ability of KNN (irrelevant or noisy predictors need to be removed in pre-processing)</li>
+</ul>
 </div>
-<div id="chapter-8" class="section level3">
-<h3>Chapter 8</h3>
+<div id="chapter-8-regression-trees-and-rule-based-models" class="section level3">
+<h3>Chapter 8: Regression Trees and Rule-Based Models</h3>
 </div>
-<div id="chapter-9" class="section level3">
-<h3>Chapter 9</h3>
+<div id="chapter-9-a-summary-of-solubility-models" class="section level3">
+<h3>Chapter 9: A Summary of Solubility Models</h3>
 </div>
-<div id="chapter-10" class="section level3">
-<h3>Chapter 10</h3>
+<div id="chapter-10-case-study-compressive-strength-of-concrete-mixtures" class="section level3">
+<h3>Chapter 10: Case Study: Compressive Strength of Concrete Mixtures</h3>
 </div>
 </div>
 <div id="classification-models" class="section level2">
 <h2>Classification Models</h2>
-<div id="chapter-11" class="section level3">
-<h3>Chapter 11</h3>
+<div id="chapter-11-measuring-performance-in-classification-models" class="section level3">
+<h3>Chapter 11: Measuring Performance in Classification Models</h3>
 </div>
-<div id="chapter-12" class="section level3">
-<h3>Chapter 12</h3>
+<div id="chapter-12-discriminant-analysis-and-other-linear-classification-models" class="section level3">
+<h3>Chapter 12: Discriminant Analysis and Other Linear Classification Models</h3>
 </div>
-<div id="chapter-13" class="section level3">
-<h3>Chapter 13</h3>
+<div id="chapter-13-nonlinear-classification-models" class="section level3">
+<h3>Chapter 13: Nonlinear Classification Models</h3>
 </div>
-<div id="chapter-14" class="section level3">
-<h3>Chapter 14</h3>
+<div id="chapter-14-classification-trees-and-rule-based-models" class="section level3">
+<h3>Chapter 14: Classification Trees and Rule-Based Models</h3>
 </div>
-<div id="chapter-15" class="section level3">
-<h3>Chapter 15</h3>
+<div id="chapter-15-a-summary-of-grant-application-models" class="section level3">
+<h3>Chapter 15: A Summary of Grant Application Models</h3>
 </div>
-<div id="chapter-16" class="section level3">
-<h3>Chapter 16</h3>
+<div id="chapter-16-remedies-of-severe-class-imbalance" class="section level3">
+<h3>Chapter 16: Remedies of Severe Class Imbalance</h3>
 </div>
-<div id="chapter-17" class="section level3">
-<h3>Chapter 17</h3>
+<div id="chapter-17-case-study-job-scheduling" class="section level3">
+<h3>Chapter 17: Case Study: Job Scheduling</h3>
 </div>
 </div>
 <div id="other-considerations" class="section level2">
 <h2>Other Considerations</h2>
-<div id="chapter-18" class="section level3">
-<h3>Chapter 18</h3>
+<div id="chapter-18-measuring-predictor-importance" class="section level3">
+<h3>Chapter 18: Measuring Predictor Importance</h3>
 </div>
-<div id="chapter-19" class="section level3">
-<h3>Chapter 19</h3>
+<div id="chapter-19-an-introduction-to-feature-selection" class="section level3">
+<h3>Chapter 19: An Introduction to Feature Selection</h3>
 </div>
-<div id="chapter-20" class="section level3">
-<h3>Chapter 20</h3>
+<div id="chapter-20-factors-that-can-affect-model-performance" class="section level3">
+<h3>Chapter 20: Factors That Can Affect Model Performance</h3>
 </div>
 </div>
 

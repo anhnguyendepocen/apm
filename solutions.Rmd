@@ -1,5 +1,5 @@
 ---
-title: "Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn -- Student Solutions"
+title: "APM Student Solutions (Ch 3 & 4)"
 output: html_document
 ---
 
@@ -11,35 +11,35 @@ knitr::opts_chunk$set(cache=TRUE)
 
 ### Exercise 3.1
 
-```{r, message=FALSE}
-library(mlbench)
+```{r ex3.1, message=FALSE, warning=FALSE}
+require(mlbench)
 data(Glass)
 str(Glass)
 
 # (a) visualizations
 pairs(Glass[,-10])
 
-library(tidyverse)
-library(ggplot2)
+require(tidyverse)
+require(ggplot2)
 
 Glass[, -10] %>% gather() %>% head()  # check
 ggplot(gather(Glass[, -10]), aes(value)) +
   geom_histogram(bins = 10) +
   facet_wrap(~key, scales = "free_x")
 
-library(corrplot)
+require(corrplot)
 correlations <- cor(Glass[, -10])
 correlations
 corrplot(correlations, order = "hclust")
 
 # (b) outliers / skewness
 # there seems to be an outlier for K and possibly for Fe
-library(e1071)
+require(e1071)
 apply(Glass[, -10], 2, skewness)  # definitely skewed
 
 # (c) relevant transformations
 # apply box cox to skewed predictors
-library(caret)
+require(caret)
 RITrans <- BoxCoxTrans(Glass$RI)
 RITrans
 predict(RITrans, head(Glass$RI))
@@ -48,18 +48,18 @@ predict(RITrans, head(Glass$RI))
 
 ### Exercise 3.2
 
-```{r, message=FALSE}
-library(mlbench)
+```{r ex3.2, message=FALSE, warning=FALSE}
+require(mlbench)
 data("Soybean")
 str(Soybean)
 
 # (a) category frequencies
-library(caret)
+require(caret)
 nearZeroVar(Soybean, saveMetrics = TRUE)
 sapply(Soybean[,nearZeroVar(Soybean)], table)
 
 # (b) missing data patterns
-library(mice)
+require(mice)
 md.pattern(Soybean)  # 562 of 683 have values for all cols
 # missing values seem to happen for entire categories, i.e. all leaf cols
 md.pattern(Soybean) %>% colnames  # col names from most to least filled out
@@ -72,14 +72,14 @@ soy_data_imputed <- mice(soy_data, method = "pmm", seed = 500)
 
 ### Exercise 3.3
 
-```{r, message=FALSE}
+```{r ex3.3, message=FALSE, warning=FALSE}
 # (a) category frequencies
-library(caret)
+require(caret)
 data(BloodBrain)
 
 # (b) degenerate distributions
 # assume this means dist with near zero variance
-library(magrittr)
+require(magrittr)
 sapply(bbbDescr[,nearZeroVar(bbbDescr)], table)
 sapply(bbbDescr[,nearZeroVar(bbbDescr)], table) %>% names()
 
@@ -110,7 +110,7 @@ __(a)__ 165 samples and 1,107 predictors. The response is highly skewed and pred
 
 __(b)__ 
 
-```{r, message=FALSE, warning=FALSE}
+```{r ex4.3, message=FALSE, warning=FALSE}
 mean_r2 <- c(0.444, 0.5, 0.533, 0.545, 0.542, 0.537, 0.534, 0.534, 0.52, 0.507)
 tolerance <- (mean_r2 - max(mean_r2))/max(mean_r2)
 tolerance
@@ -122,7 +122,7 @@ __(c) & (d)__ If goal is to optimize R^2, then choose the model that has the bes
 
 ### Exercise 4.4
 
-```{r, message=FALSE, warning=FALSE}
+```{r ex4.4, message=FALSE, warning=FALSE}
 require(AppliedPredictiveModeling)
 require(caret)
 data(oil)
@@ -159,70 +159,4 @@ diff(binom.test(60 * test_accuracy, 60)[["conf.int"]])
 diff(binom.test(80 * test_accuracy, 80)[["conf.int"]])
 diff(binom.test(100 * test_accuracy, 100)[["conf.int"]])
 diff(binom.test(1000 * test_accuracy, 1000)[["conf.int"]])
-```
-
-## Regression Models
-
-### Exercise 6
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 7
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 8
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-## Classification Models
-
-### Exercise 12
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 13
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 14
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 16
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-## Other Considerations
-
-### Exercise 18
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 19
-
-```{r, message=FALSE, warning=FALSE}
-
-```
-
-### Exercise 20
-
-```{r, message=FALSE, warning=FALSE}
-
 ```

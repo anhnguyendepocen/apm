@@ -1,5 +1,5 @@
 ---
-title: "Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn -- Notes"
+title: "APM Notes"
 output: html_document
 ---
 
@@ -9,7 +9,7 @@ knitr::opts_chunk$set(cache=TRUE)
 
 ## Introduction
 
-### Chapter 1
+### Chapter 1: Introduction
 
 Data characteristics to evaluate
 
@@ -27,13 +27,15 @@ Data characteristics to evaluate
     * missing values
     * sparse
     
+    
 ## General Strategies
     
-### Chapter 2
+### Chapter 2: A Short Tour of the Predictive Modeling Process
 
 n/a
 
-### Chapter 3
+
+### Chapter 3: Data Pre-Processing
 
 * __Centering__: subtract average value so that predictors have 0 mean
 * __Scaling__: divide by standard deviation so predictors all have sd of 1
@@ -41,14 +43,6 @@ n/a
 For __skewness__, general rule of thumb is if ratio of highest value to lowest value is greater than 20, there is significant skewness. If using the skewness statistic, a symmetric distribution will have a skewness value close to 0, right skewed distributions have a positive statistic and left skewed distributions have a negative statistic.
 
 Transforming data with log, square root, or inverse could remove skewness. 
-
-```{r, message=FALSE}
-library(AppliedPredictiveModeling)
-library(e1071)
-data("segmentationOriginal")
-#apply(segmentationOriginal[, -(1:3)], 2, function(x) skewness(x))
-# can't match the 2.39 from book
-```
 
 __Box-Cox Transformation__
 
@@ -86,56 +80,8 @@ __Removing Variables__
     * limited to linear regression and requires more samples than predictors
 * could remove min # of predictors so that pairwise correlations are below some threshold (e.g. 0.75)
 
-```{r, message=FALSE}
-library(AppliedPredictiveModeling)
-library(e1071)
-library(caret)
-library(corrplot)
-data("segmentationOriginal")
-segData <- subset(segmentationOriginal, Case == "Train")
-cellID <- segData$Cell
-class <- segData$Class
-case <- segData$Case
-segData <- segData[, -(1:3)]  # drop cols
 
-statusColNum <- grep("Status", names(segData))  # binary versions of predictors
-segData <- segData[, -statusColNum]
-skewValues <- apply(segData, 2, skewness)
-head(skewValues)
-
-# Box Cox Transform
-Ch1AreaTrans <- BoxCoxTrans(segData$AreaCh1)
-Ch1AreaTrans
-head(segData$AreaCh1)
-predict(Ch1AreaTrans, head(segData$AreaCh1))
-
-# PCA using base R
-pcaObject <- prcomp(segData,
-                    center = TRUE, scale. = TRUE)
-percentVariance <- pcaObject$sdev^2/sum(pcaObject$sdev^2)*100
-percentVariance[1:3]  # pct var explained
-head(pcaObject$x[, 1:5])  # transformed object
-head(pcaObject$rotation[, 1:3])  # loadings
-
-# pre-processing with caret
-trans <- preProcess(segData,
-                    method = c("BoxCox", "center", "scale", "pca"))
-trans
-transformed <- predict(trans, segData)
-head(transformed)
-nearZeroVar(segData)
-
-correlations <- cor(segData)
-correlations[1:4, 1:4]
-#corrplot(correlations, order = "hclust")
-
-highCorr <- findCorrelation(correlations, cutoff = 0.75)
-length(highCorr)
-head(highCorr)
-filteredSegData <- segData[, -highCorr]
-```
-
-### Chapter 4
+### Chapter 4: Over-Fitting and Model Tuning
 
 * __apparent__ performance is using training set to predict model performance
 * __tuning parameters__ are model params that can't be estimated with formulas (number of neighbors in a KNN classification model)
@@ -194,95 +140,10 @@ __Choosing Between Models__
 
 A __paired t-test__ can be used to evaluate if there are statistically significant differences in model performance.
 
-```{r, message=FALSE, warning=FALSE}
-rm(list=ls())
-library(AppliedPredictiveModeling)
-library(caret)
-#library(Design)  # replaced with rms
-library(rms)
-library(e1071)
-library(ipred)
-library(MASS)
-
-data(twoClassData)
-str(predictors)
-str(classes)
-
-# data splitting
-set.seed(1)
-trainingRows <- createDataPartition(classes, p = 0.8, list = FALSE)
-head(trainingRows)
-trainPredictors <- predictors[trainingRows,]
-trainClasses <- classes[trainingRows]  # not a dataframe, just vector
-testPredictors <- predictors[-trainingRows,]
-testClasses <- classes[-trainingRows]
-
-str(trainPredictors)
-str(testPredictors)
-# caret fn 'maxdissim' generates test set using max dissimilarity sampling
-
-# resampling
-# - repeated training/test splits
-set.seed(1)
-repeatedSplits <- createDataPartition(trainClasses, p = 0.8, times = 3)
-str(repeatedSplits)
-# - k-fold CV
-set.seed(1)
-cvSplits <- createFolds(trainClasses, k = 10, returnTrain = TRUE)
-str(cvSplits)
-cvPredictors1 <- trainPredictors[cvSplits[[1]],]
-cvClasses1 <- trainClasses[cvSplits[[1]]]
-nrow(cvPredictors1)/nrow(trainPredictors)
-# - bootstrapping: createResamples
-# - repeated CV: createMultiFolds
-
-# model building
-# using formula interface w large data can by unnecessarily slow
-# - using knn3 from caret
-trainPredictors <- as.matrix(trainPredictors)
-knnFit <- knn3(x = trainPredictors, y = trainClasses, k = 5)
-knnFit
-testPredictions <- predict(knnFit, newdata = testPredictors, type = "class")
-head(testPredictions)
-
-# determining tuning parameters
-rm(list=ls())
-data("GermanCredit")
-set.seed(1056)
-trainingRows <- createDataPartition(GermanCredit$Class, p = 0.8, list = FALSE)
-GermanCreditTrain <- GermanCredit[trainingRows, -(1:9)]  # drop first 9 cols
-dropZeroVar <- nearZeroVar(GermanCreditTrain)
-GermanCreditTrain <- GermanCreditTrain[, -dropZeroVar]
-GermanCreditTest <- GermanCredit[-trainingRows, -(1:9)]  # drop first 9 cols
-GermanCreditTest <- GermanCreditTest[, -dropZeroVar]
-svmFit <- train(Class ~.,
-                data = GermanCreditTrain,
-                method = "svmRadial",
-                preProc = c("center", "scale"),
-                tuneLength = 10,  # evals 2^(-2) to 2^7
-                trControl = trainControl(method = "repeatedcv", repeats = 5)) 
-svmFit
-plot(svmFit, scales = list(x = list(log = 2)))
-#predictedProbs <- predict(svmFit, newdata = GermanCreditTest, type = "prob")  # see errata
-
-# between model comparison
-set.seed(1056)
-logisticReg <- train(Class ~.,
-                     data = GermanCreditTrain,
-                     method = "glm",
-                     trControl = trainControl(method = "repeatedcv", repeats =5))
-logisticReg  # need to remove extra cols for one hot encoding? not going to bother for notes
-resamp <- resamples(list(SVM = svmFit, Logistic = logisticReg))
-summary(resamp)
-?xyplot.resamples
-modelDifferences <- diff(resamp)
-summary(modelDifferences)
-# small values for SVM mean small p vals so possible that models are really different
-```
 
 ## Regression Models
 
-### Chapter 5
+### Chapter 5: Measuring Performance in Regression Models
 
 __Quantitative Performance Measures__
 
@@ -299,7 +160,7 @@ __Quantitative Performance Measures__
 
 __Variance-Bias Trade-off__
 
-Expected value of MSe is equal to irreducible noise plus squared bias plus model variance.
+Expected value of MSE is equal to irreducible noise plus squared bias plus model variance.
 
 * Model bias is how close model form can reflect true relationship between predictors and outcome
 * Model variance reflects how much model parameters will change if predictors change
@@ -307,92 +168,199 @@ Expected value of MSe is equal to irreducible noise plus squared bias plus model
 
 $$E[MSE] = \sigma^{2} + (Model Bias)^{2} + Model Variance$$
 
-```{r, message=FALSE, warning=FALSE}
-rm(list=ls())
-observed <-  c(0.22, 0.83,-0.12, 0.89,-0.23,-1.30,-0.15,-1.4,
-               0.62, 0.99,-0.18, 0.32, 0.34,-0.30, 0.04,-0.87,
-               0.55,-1.30,-1.15, 0.20)
-predicted <- c(0.24, 0.78,-0.66, 0.53, 0.70,-0.75,-0.41,-0.43,
-               0.49, 0.79,-1.19, 0.06, 0.75,-0.07, 0.43,-0.42,
-              -0.25,-0.64,-1.26,-0.07)
-residualValues <- observed - predicted
-summary(residualValues)
-# observed versus predicted
-axisRange <- extendrange(c(observed, predicted))
-plot(observed, predicted, ylim = axisRange, xlim = axisRange)
-abline(0, 1, col = "darkgrey", lty = 2)
-# predicted versus residuals
-plot(predicted, residualValues, ylab = "residual")
-abline(h = 0, col = "darkgrey", lty = 2)
-# quantitative model performance measures
-require(caret)
-R2(predicted, observed)
-RMSE(predicted, observed)
-cor(predicted, observed)  # base R simple correlation
-cor(predicted, observed)^2  # match R^2
-cor(predicted, observed, method = "spearman")  # rank correlation
-```
 
-### Chapter 6
+### Chapter 6: Linear Regression and Its Cousins
+
+* ordinary linear regression finds parameter estimates that minimize bias
+    * objective is to minimize sum of squared errors
+* ridge, lasso, and elastic net find estimates that have lower variance
+
+Benefits of linear regression type models
+
+* predictor changes are easiliy interpretable
+* relationship among predictors is easily interpretable
+* mathematical nature allows for standard error computations
+    * can assess statistical significance of each predictor, but need to make assumptions about residual distribution
+    
+Drawbacks of linear regression type models
+
+* solution may not be linear in parameters
+* sensitive to outliers bc SSE is minimized
+    * can use MAE or Huber function instead (Huber uses squared residuals under a threshold and simple difference above threshold)
+    
+__Linear Regression__
+
+$$\hat{\beta} = (X^{T}X)^{-1}X^{T}y$$
+
+* inverse of $(X^{T}X)$ exists when:
+    * no predictor can be determined from a combo of other predictors
+        * removing pairwise correlated predictors does not eliminate predictors that are functions of 2+ predictors
+        * use variance inflation factor to diagnose multicollinearity
+    * number of samples is greater than number of predictors
+    
+__Partial Least Squares__
+
+* pre-processing predictors with PCA before regression is called PCR
+    * drawback is that PCA does not consider response, so if variability of predictors is unrelated to variability of response then regression will not be good
+        * PLS is recommended when there are correlated predictors and want a linear regression type model
+* PLS finds components that maximally summarize variation of predictors while also requiring components to have max correlation with response
+    * iterative process of calculating weights (w), scores (t), and loadings (p)
+        * w: relationship b/w predictor and response, signals predictor importance in VIP (variable importance in the projection)
+        * t: predictor orthongonally projected onto direction
+        * p: correlation between scores (t) and original predictors
+        * at end of iteration, current estimates are subtracted from predictors and responses
+    * can be thought of like supervised dimension reduction
+    * predictors should be centered and scaled before PLS, similar to PCA
+    * has one tuning parameter: number of components
+    * squared VIP values sum to number of predictors
+        * general rule of thumb is if VIP > 1 then predictor has predictive info for response
+        * predictors with small PLS regression coef and small VIP are likely not important for model
+    * algo has been improved upon many times, though other models are still recommended for nonlinear relationships b/w predictors and response instead of augmenting PLS
+* in practice, PCR and PLS produce models with similar performance but PCR needs to retain more components
+
+__Penalized Models__
+
+* OLS coef are unbiased and has lowest variance of unbiased linear models
+* common that small increase in bias will lower var significantly, thus reducing MSE
+    * correlation can lead to large variance
+    * biased models that deal w collinearity better can have better MSE than OLS
+* one way to create biased model is by using penalty
+    * since penalty is applied to coefficients, they should be on the same scale so predictors should be centered and scaled
+    * when model overfits or coef are inflated bc of collinearity, can add penalty to SSE if estimates are large
+    * ridge regression adds penalty to the sum of squared regression parameters
+        * L2: second order penalty
+    * lasso (least absolute shrinkage and selection) adds penalty to abs value of regression parameters
+        * L1: first order penalty
+        * also does feature selection bc some betas are set to 0, unliked ridge
+    * LARS (least angle regression) includes lasso and similar models
+    * elastic net combines ridge and lasso penalties (different lambdas)
+        * combines effective regularization of ridge and feature selection of lasso
+        * might more effectively deal w groups of correlated vars
+        
+
+### Chapter 7: Nonlinear Regression Models
+
+* linear models can handle non linearity but must know nature of nonlinearity to manually adjust
+
+__Neural Networks__
+
+* hidden layer is a linear combo of predictors, but typically transformed by nonlinear function (i.e. sigmoidal)
+* output is a linear combo of hidden layer units
+* coef are unlikely to present coherent info bc there are no constraints to defining the linear combo (unlike PLS)
+* total params estimates are $H(P+1)+H+1$
+* challenging optimization problem bc of number of params
+    * back propagation is an efficient method of using derivatives, but soln is often not a global one
+    * tendency to overfit
+        * can address with early stopping method to halt when error rate increases, however, errors have uncertainty
+        * can also use regularization (weight decay) and add penalty to coefficients (__lambda is usually b/w 0 and 0.1__)
+        * bc models can be unstable (finds local optimal solution), several models can be averaged, this has a large positive fefect on neural networks 
+
+__Multivariate Adaptive Regression Splines (MARS)__
+
+* creates new features from one or two predictors by finding a breakpoint for which one side is 0 until breakpoint and the other is 0 after breakpoint
+    * each predictor is evaluated for breakpoint by minimized error
+        * additional features are evaluated on top of prior features until a stopping point is reached
+        * hinge functions are typically written as $h(x-a)$ (nonzero when $x>a$) and $h(a-x)$ (nonzero when $x<a$)
+        * this wouldn't be done for binary predictors
+    * becomes a piecewise linear model
+* after creating full set of features, features are pruned if they don't significantly reduce error rate using leave one out CV approximation
+    * process does not proceed backwards from feature creation
+* second degree MARS does the same search for single predictor breakpoints and then searches for new cuts to couple with original features
+    * in practice, have seen second degree or higher MARS produce have instabilities where a few samples predictions are wildly inaccurate
+        * this has not been observed with additive MARS models
+* two tuning parameters: degree of features added, number of retained terms
+* advantages of using MARS
+    * automatically does feature selection
+        * model equation is independent of predictors that are not involved with any final model features
+    * very interpretable
+    * requires little pre-processing
+        * MARS is okay if there are correlated variables, but strong correlations will hurt interpretability
+    
+__Support Vector Machines__
+
+* drawback of minimizing SSE is that models are sensitive to outliers
+    * alternative is to use Huber function, where residuals are squared for small values else use absolute values
+    * SVM is similar in that user selects a threshold and residuals within threshold do not contribute to error and above threshold contribute a linear scale amount
+        * squared residuals are not used, so less sensitive to outliers
+        * if threshold is high, outliers determine the regression
+* SVM has to fit number of parameters on scale of sample size
+    * regularization helps over-parameterization
+    * training data is required to make new predictions
+        * when training data is large, SVM can be time consuming, unless many samples have $\alpha=0$ due to cost penalty
+* cost penalty is applied to residuals, lower cost leads to underfitting
+* SVM can have different kernels: linear, polynomial, radial, hyperbolic
+    * using kernel functions can introduce new parameters
+        * for radial kernel, can estimate scale parameter with shortcut
+    * in practice radial kernel does quite well, unless true relationship is linear
+* in practice, cost parameter provides more flexibility for model tuning, so recommend fixing epsilon and tuning over kernel parameters
+* predictors should be centered and scaled bc they enter model as sum of cross products
+* relevance vector machine is a bayesian analog to SVM
+
+__K-Nearest Neighbors__
+
+* user defines distance measure
+    * Euclidean distance (straight line) is most common
+    * Minkowski distance is a generalization of Euclidean distance (handles higher dimensions)
+* predictors should be centered and scaled to prevent predictors with larger scales biasing results
+* distance computation requires non-missing values
+    * can exclude missing values or impute with naive estimator (e.g. mean)
+* ideal K can be selection through resampling
+    * small K's overfit and large K's underfit
+* problems include computation time (distance calc requires entire sample to be in memory) and disconnect between local structure and predictive ability of KNN (irrelevant or noisy predictors need to be removed in pre-processing)
+
+
+### Chapter 8: Regression Trees and Rule-Based Models
 
 
 
-### Chapter 7
+### Chapter 9: A Summary of Solubility Models
 
 
 
-### Chapter 8
-
-
-
-### Chapter 9
-
-
-
-### Chapter 10
+### Chapter 10: Case Study: Compressive Strength of Concrete Mixtures
 
 
 
 ## Classification Models
 
-### Chapter 11
+### Chapter 11: Measuring Performance in Classification Models
 
 
 
-### Chapter 12
+### Chapter 12: Discriminant Analysis and Other Linear Classification Models
 
 
 
-### Chapter 13
+### Chapter 13: Nonlinear Classification Models
 
 
 
-### Chapter 14
+### Chapter 14: Classification Trees and Rule-Based Models
 
 
 
-### Chapter 15
+### Chapter 15: A Summary of Grant Application Models
 
 
 
-### Chapter 16
+### Chapter 16: Remedies of Severe Class Imbalance
 
 
 
-### Chapter 17
+### Chapter 17: Case Study: Job Scheduling
 
 
 
 ## Other Considerations
 
-### Chapter 18
+### Chapter 18: Measuring Predictor Importance
 
 
 
-### Chapter 19
+### Chapter 19: An Introduction to Feature Selection
 
 
 
-### Chapter 20
+### Chapter 20: Factors That Can Affect Model Performance
 
 

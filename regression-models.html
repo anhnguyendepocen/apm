@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>APM Computation</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 45px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+
+.section h2 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+.section h3 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+.section h4 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+.section h5 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+.section h6 {
+  padding-top: 50px;
+  margin-top: -50px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Applied Predictive Modeling (2013)</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Notes</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Computation
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="general-strategies.html">General Strategies</a>
+    </li>
+    <li>
+      <a href="regression-models.html">Regression Models</a>
+    </li>
+    <li>
+      <a href="classification-models.html">Classification Models</a>
+    </li>
+    <li>
+      <a href="other-considerations.html">Other Considerations</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="solutions.html">Solutions</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">APM Computation</h1>
+
+</div>
+
+
+<div id="regression-models" class="section level2">
+<h2>Regression Models</h2>
+<div id="chapter-5-measuring-performance-in-regression-models" class="section level3">
+<h3>Chapter 5: Measuring Performance in Regression Models</h3>
+<pre class="r"><code>rm(list=ls())
+observed &lt;-  c(0.22, 0.83,-0.12, 0.89,-0.23,-1.30,-0.15,-1.4,
+               0.62, 0.99,-0.18, 0.32, 0.34,-0.30, 0.04,-0.87,
+               0.55,-1.30,-1.15, 0.20)
+predicted &lt;- c(0.24, 0.78,-0.66, 0.53, 0.70,-0.75,-0.41,-0.43,
+               0.49, 0.79,-1.19, 0.06, 0.75,-0.07, 0.43,-0.42,
+              -0.25,-0.64,-1.26,-0.07)
+residualValues &lt;- observed - predicted
+summary(residualValues)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -0.9700 -0.4200  0.0800 -0.0310  0.2625  1.0100</code></pre>
+<pre class="r"><code># observed versus predicted
+axisRange &lt;- extendrange(c(observed, predicted))
+plot(observed, predicted, ylim = axisRange, xlim = axisRange)
+abline(0, 1, col = &quot;darkgrey&quot;, lty = 2)</code></pre>
+<p><img src="regression-models_files/figure-html/ch5-1.png" width="672" /></p>
+<pre class="r"><code># predicted versus residuals
+plot(predicted, residualValues, ylab = &quot;residual&quot;)
+abline(h = 0, col = &quot;darkgrey&quot;, lty = 2)
+
+# quantitative model performance measures
+library(caret)</code></pre>
+<p><img src="regression-models_files/figure-html/ch5-2.png" width="672" /></p>
+<pre class="r"><code>R2(predicted, observed)</code></pre>
+<pre><code>## [1] 0.5170123</code></pre>
+<pre class="r"><code>RMSE(predicted, observed)</code></pre>
+<pre><code>## [1] 0.5234883</code></pre>
+<pre class="r"><code>cor(predicted, observed)  # base R simple correlation</code></pre>
+<pre><code>## [1] 0.7190357</code></pre>
+<pre class="r"><code>cor(predicted, observed)^2  # match R^2</code></pre>
+<pre><code>## [1] 0.5170123</code></pre>
+<pre class="r"><code>cor(predicted, observed, method = &quot;spearman&quot;)  # rank correlation</code></pre>
+<pre><code>## [1] 0.7554552</code></pre>
+</div>
+<div id="chapter-6-linear-regression-and-its-cousins" class="section level3">
+<h3>Chapter 6: Linear Regression and Its Cousins</h3>
+<pre class="r"><code>rm(list = ls())
+require(AppliedPredictiveModeling)
+require(elasticnet)
+require(lars)
+require(caret)
+require(MASS)
+require(pls)
+require(stats)
+data(solubility)
+ls(pattern = &quot;^sol&quot;)  # obj beginning w &quot;sol&quot;</code></pre>
+<pre><code>## [1] &quot;solTestX&quot;       &quot;solTestXtrans&quot;  &quot;solTestY&quot;       &quot;solTrainX&quot;     
+## [5] &quot;solTrainXtrans&quot; &quot;solTrainY&quot;</code></pre>
+<pre class="r"><code>trainingData &lt;- solTrainXtrans
+trainingData$Solubility &lt;- solTrainY
+
+### Ordinary Linear Regression ###
+
+lmFitAllPredictors &lt;- lm(Solubility ~., data = trainingData)
+str(summary(lmFitAllPredictors))  # training results</code></pre>
+<pre><code>## List of 11
+##  $ call         : language lm(formula = Solubility ~ ., data = trainingData)
+##  $ terms        :Classes &#39;terms&#39;, &#39;formula&#39;  language Solubility ~ FP001 + FP002 + FP003 + FP004 + FP005 + FP006 + FP007 +      FP008 + FP009 + FP010 + FP011 + FP012 +| __truncated__ ...
+##   .. ..- attr(*, &quot;variables&quot;)= language list(Solubility, FP001, FP002, FP003, FP004, FP005, FP006, FP007,      FP008, FP009, FP010, FP011, FP012, FP013, | __truncated__ ...
+##   .. ..- attr(*, &quot;factors&quot;)= int [1:229, 1:228] 0 1 0 0 0 0 0 0 0 0 ...
+##   .. .. ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. .. .. ..$ : chr [1:229] &quot;Solubility&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##   .. .. .. ..$ : chr [1:228] &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; &quot;FP004&quot; ...
+##   .. ..- attr(*, &quot;term.labels&quot;)= chr [1:228] &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; &quot;FP004&quot; ...
+##   .. ..- attr(*, &quot;order&quot;)= int [1:228] 1 1 1 1 1 1 1 1 1 1 ...
+##   .. ..- attr(*, &quot;intercept&quot;)= int 1
+##   .. ..- attr(*, &quot;response&quot;)= int 1
+##   .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+##   .. ..- attr(*, &quot;predvars&quot;)= language list(Solubility, FP001, FP002, FP003, FP004, FP005, FP006, FP007,      FP008, FP009, FP010, FP011, FP012, FP013, | __truncated__ ...
+##   .. ..- attr(*, &quot;dataClasses&quot;)= Named chr [1:229] &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; ...
+##   .. .. ..- attr(*, &quot;names&quot;)= chr [1:229] &quot;Solubility&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##  $ residuals    : Named num [1:951] -0.36722 0.62243 -0.47199 -0.33254 -0.00967 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:951] &quot;661&quot; &quot;662&quot; &quot;663&quot; &quot;665&quot; ...
+##  $ coefficients : num [1:229, 1:4] 2.4307 0.3594 0.1456 -0.0397 -0.3049 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:229] &quot;(Intercept)&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##   .. ..$ : chr [1:4] &quot;Estimate&quot; &quot;Std. Error&quot; &quot;t value&quot; &quot;Pr(&gt;|t|)&quot;
+##  $ aliased      : Named logi [1:229] FALSE FALSE FALSE FALSE FALSE FALSE ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:229] &quot;(Intercept)&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##  $ sigma        : num 0.552
+##  $ df           : int [1:3] 229 722 229
+##  $ r.squared    : num 0.945
+##  $ adj.r.squared: num 0.927
+##  $ fstatistic   : Named num [1:3] 54 228 722
+##   ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;value&quot; &quot;numdf&quot; &quot;dendf&quot;
+##  $ cov.unscaled : num [1:229, 1:229] 15.3197 -0.0678 -0.0537 0.0504 -0.022 ...
+##   ..- attr(*, &quot;dimnames&quot;)=List of 2
+##   .. ..$ : chr [1:229] &quot;(Intercept)&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##   .. ..$ : chr [1:229] &quot;(Intercept)&quot; &quot;FP001&quot; &quot;FP002&quot; &quot;FP003&quot; ...
+##  - attr(*, &quot;class&quot;)= chr &quot;summary.lm&quot;</code></pre>
+<pre class="r"><code>lmPred1 &lt;- predict(lmFitAllPredictors, solTestXtrans)
+head(lmPred1)</code></pre>
+<pre><code>##          20          21          23          25          28          31 
+##  0.99370933  0.06834627 -0.69877632  0.84796356 -0.16578324  1.40815083</code></pre>
+<pre class="r"><code>lmValues1 &lt;- data.frame(obs = solTestY, pred = lmPred1)
+defaultSummary(lmValues1)  # caret metrics</code></pre>
+<pre><code>##      RMSE  Rsquared       MAE 
+## 0.7455802 0.8722236 0.5497605</code></pre>
+<pre class="r"><code># using robust lm from MASS (uses Huber approach)
+ctrl &lt;- trainControl(method = &quot;cv&quot;, number = 10)
+set.seed(100)  
+lmFit1 &lt;- train(x = solTrainXtrans, y = solTrainY,
+                method = &quot;lm&quot;, trControl = ctrl)
+lmFit1</code></pre>
+<pre><code>## Linear Regression 
+## 
+## 951 samples
+## 228 predictors
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 856, 856, 855, 855, 857, 856, ... 
+## Resampling results:
+## 
+##   RMSE       Rsquared   MAE      
+##   0.6926348  0.8872058  0.5199216
+## 
+## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
+<pre class="r"><code>xyplot(solTrainY ~ predict(lmFit1),
+       # plot points and use background grid
+       type = c(&quot;p&quot;, &quot;g&quot;),
+       xlab = &quot;Predicted&quot;, ylab = &quot;Observed&quot;)</code></pre>
+<p><img src="regression-models_files/figure-html/ch6-1.png" width="672" /></p>
+<pre class="r"><code>xyplot(resid(lmFit1) ~ predict(lmFit1),
+       type = c(&quot;p&quot;, &quot;g&quot;),
+       xlab = &quot;Predicted&quot;, ylab = &quot;Residuals&quot;)</code></pre>
+<p><img src="regression-models_files/figure-html/ch6-2.png" width="672" /></p>
+<pre class="r"><code># using train function
+corThresh &lt;- 0.9
+tooHigh &lt;- findCorrelation(cor(solTrainXtrans), corThresh)
+corrPred &lt;- names(solTrainXtrans)[tooHigh]
+trainXfiltered &lt;- solTrainXtrans[, -tooHigh]
+testXfiltered &lt;- solTestXtrans[, -tooHigh]
+set.seed(100)
+lmFiltered &lt;- train(trainXfiltered, solTrainY, method = &quot;lm&quot;, trControl = ctrl)
+lmFiltered</code></pre>
+<pre><code>## Linear Regression 
+## 
+## 951 samples
+## 190 predictors
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 856, 856, 855, 855, 857, 856, ... 
+## Resampling results:
+## 
+##   RMSE       Rsquared   MAE      
+##   0.6980579  0.8857871  0.5251033
+## 
+## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
+<pre class="r"><code>rlmPCA &lt;- train(trainXfiltered, solTrainY, method = &quot;rlm&quot;, preProcess = &quot;pca&quot;, trControl = ctrl)
+rlmPCA</code></pre>
+<pre><code>## Robust Linear Model 
+## 
+## 951 samples
+## 190 predictors
+## 
+## Pre-processing: principal component signal extraction (190),
+##  centered (190), scaled (190) 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 856, 855, 857, 855, 855, 855, ... 
+## Resampling results across tuning parameters:
+## 
+##   intercept  psi           RMSE       Rsquared   MAE      
+##   FALSE      psi.huber     2.8428697  0.8365759  2.7190689
+##   FALSE      psi.hampel    2.8430314  0.8366099  2.7192498
+##   FALSE      psi.bisquare  2.8427605  0.8367128  2.7191205
+##    TRUE      psi.huber     0.8332064  0.8352457  0.6342326
+##    TRUE      psi.hampel    0.8306776  0.8361875  0.6353316
+##    TRUE      psi.bisquare  0.8395935  0.8328240  0.6376391
+## 
+## RMSE was used to select the optimal model using the smallest value.
+## The final values used for the model were intercept = TRUE and psi
+##  = psi.hampel.</code></pre>
+<pre class="r"><code>### Partial Least Squares ###
+plsFit &lt;- plsr(Solubility ~., data = trainingData)
+predict(plsFit, solTestXtrans[1:5,], ncomp = 1:2)</code></pre>
+<pre><code>## , , 1 comps
+## 
+##    Solubility
+## 20  -1.789335
+## 21  -1.427551
+## 23  -2.268798
+## 25  -2.269782
+## 28  -1.867960
+## 
+## , , 2 comps
+## 
+##    Solubility
+## 20  0.2520469
+## 21  0.3555028
+## 23 -1.8795338
+## 25 -0.6848584
+## 28 -1.5531552</code></pre>
+<pre class="r"><code># using train function
+plsTune &lt;- train(solTrainXtrans, solTrainY,
+                 method = &quot;pls&quot;, 
+                 tuneLength = 20,  # default tuning grid evals 1:tuneLength
+                 trControl = ctrl,
+                 preProcess = c(&quot;center&quot;, &quot;scale&quot;))
+plsTune</code></pre>
+<pre><code>## Partial Least Squares 
+## 
+## 951 samples
+## 228 predictors
+## 
+## Pre-processing: centered (228), scaled (228) 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 855, 856, 856, 857, 855, 856, ... 
+## Resampling results across tuning parameters:
+## 
+##   ncomp  RMSE       Rsquared   MAE      
+##    1     1.2837126  0.6035247  0.9922825
+##    2     1.0547201  0.7324842  0.8319901
+##    3     0.9357512  0.7900099  0.7242684
+##    4     0.8616608  0.8211019  0.6722070
+##    5     0.8160783  0.8387881  0.6361127
+##    6     0.7822121  0.8532419  0.6045357
+##    7     0.7563839  0.8627598  0.5768689
+##    8     0.7445818  0.8666266  0.5698316
+##    9     0.7319242  0.8710991  0.5593103
+##   10     0.7165426  0.8766836  0.5474919
+##   11     0.7114162  0.8786968  0.5428781
+##   12     0.7016554  0.8820784  0.5353093
+##   13     0.7005284  0.8826371  0.5331785
+##   14     0.7016078  0.8824373  0.5350061
+##   15     0.6973150  0.8839006  0.5303442
+##   16     0.6941679  0.8850301  0.5307692
+##   17     0.6941309  0.8850671  0.5328551
+##   18     0.6902336  0.8862730  0.5310625
+##   19     0.6929507  0.8853791  0.5320262
+##   20     0.6948920  0.8847706  0.5335884
+## 
+## RMSE was used to select the optimal model using the smallest value.
+## The final value used for the model was ncomp = 18.</code></pre>
+<pre class="r"><code>### Penalized Regression Models ###
+
+# ridge; lm.ridge from MASS or enet from elasticnet
+ridgeModel &lt;- enet(x = as.matrix(solTrainXtrans), y = solTrainY, 
+                   lambda = 0.001)  # this is ridge penalty
+ridgePred &lt;- predict(ridgeModel, newx = as.matrix(solTestXtrans),
+                     s = 1, mode = &quot;fraction&quot;,  # s=1 is full solution. lasso lamba=0 so this is ridge regression
+                     type = &quot;fit&quot;)
+head(ridgePred$fit)</code></pre>
+<pre><code>##          20          21          23          25          28          31 
+##  0.96795590  0.06918538 -0.54365077  0.96072014 -0.03594693  1.59284535</code></pre>
+<pre class="r"><code># defining tuning grid
+ridgeGrid &lt;- data.frame(.lambda = seq(0, 0.1, length = 15))
+set.seed(100)
+ridgeRegFit &lt;- train(solTrainXtrans, solTrainY,
+                     method = &quot;ridge&quot;,
+                     tuneGrid = ridgeGrid,
+                     trControl = ctrl,
+                     preProcess = c(&quot;center&quot;, &quot;scale&quot;))
+ridgeRegFit</code></pre>
+<pre><code>## Ridge Regression 
+## 
+## 951 samples
+## 228 predictors
+## 
+## Pre-processing: centered (228), scaled (228) 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 856, 856, 855, 855, 857, 856, ... 
+## Resampling results across tuning parameters:
+## 
+##   lambda       RMSE       Rsquared   MAE      
+##   0.000000000  0.6923558  0.8872977  0.5194817
+##   0.007142857  0.6842051  0.8901855  0.5180204
+##   0.014285714  0.6782572  0.8924345  0.5135023
+##   0.021428571  0.6763196  0.8933364  0.5129646
+##   0.028571429  0.6761659  0.8936611  0.5137609
+##   0.035714286  0.6770285  0.8936769  0.5150076
+##   0.042857143  0.6785555  0.8935075  0.5169778
+##   0.050000000  0.6805575  0.8932196  0.5190373
+##   0.057142857  0.6829220  0.8928530  0.5213703
+##   0.064285714  0.6855755  0.8924331  0.5238093
+##   0.071428571  0.6884742  0.8919761  0.5263585
+##   0.078571429  0.6915802  0.8914943  0.5290529
+##   0.085714286  0.6948706  0.8909958  0.5318508
+##   0.092857143  0.6983276  0.8904864  0.5347012
+##   0.100000000  0.7019378  0.8899703  0.5375828
+## 
+## RMSE was used to select the optimal model using the smallest value.
+## The final value used for the model was lambda = 0.02857143.</code></pre>
+<pre class="r"><code># lasso: lars from lars or enet from elasticnet or glmnet
+enetModel &lt;- enet(x = as.matrix(solTrainXtrans), y = solTrainY,
+                  lambda = 0.01, normalize = TRUE)  # normalize does center and scale
+enetPred &lt;- predict(enetModel, newx = as.matrix(solTestXtrans),
+                    s = 0.1, mode = &quot;fraction&quot;,
+                    type = &quot;fit&quot;)
+names(enetPred)</code></pre>
+<pre><code>## [1] &quot;s&quot;        &quot;fraction&quot; &quot;mode&quot;     &quot;fit&quot;</code></pre>
+<pre class="r"><code>head(enetPred$fit)</code></pre>
+<pre><code>##          20          21          23          25          28          31 
+## -0.60186178 -0.42226814 -1.20465564 -1.23652963 -1.25023517 -0.05587631</code></pre>
+<pre class="r"><code>enetCoef &lt;- predict(enetModel, newx = as.matrix(solTestXtrans),
+                    s = 0.1, mode = &quot;fraction&quot;,
+                    type = &quot;coefficients&quot;)
+
+tail(enetCoef$coefficients)</code></pre>
+<pre><code>##       NumChlorine        NumHalogen          NumRings HydrophilicFactor 
+##        0.00000000        0.00000000        0.00000000        0.12678967 
+##      SurfaceArea1      SurfaceArea2 
+##        0.09035596        0.00000000</code></pre>
+<pre class="r"><code># using train function for lasso
+enetGrid &lt;- expand.grid(.lambda = c(0, 0.01, 0.1),
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(100)
+enetTune &lt;- train(solTrainXtrans, solTrainY,
+                  method = &quot;enet&quot;,
+                  tuneGrid = enetGrid,
+                  trControl = ctrl,
+                  preProcess = c(&quot;center&quot;, &quot;scale&quot;))
+plot(enetTune)</code></pre>
+<p><img src="regression-models_files/figure-html/ch6-3.png" width="672" /></p>
+</div>
+<div id="chapter-7-nonlinear-regression-models" class="section level3">
+<h3>Chapter 7: Nonlinear Regression Models</h3>
+<pre class="r"><code>rm(list = ls())
+require(AppliedPredictiveModeling)
+require(caret)
+require(earth)
+require(kernlab)
+require(nnet)
+
+### Neural Networks ###
+
+# using nnet
+# nnetFit &lt;- nnet(predictors, outcome, 
+#                 size = 5,
+#                 decay = 0.01,
+#                 linout = TRUE,
+#                 trace = FALSE, 
+#                 maxit = 500,
+#                 MaxNwts = 5 * (ncol(predictors) + 1) + 5 + 1)
+# nnetAvg &lt;- avNNet(predictors, outcome, 
+#                 size = 5,
+#                 decay = 0.01,
+#                 linout = TRUE,
+#                 trace = FALSE, 
+#                 maxit = 500,
+#                 MaxNwts = 5 * (ncol(predictors) + 1) + 5 + 1)
+# predict(nnetFit, newData)
+# predict(nnetAvg, newData)
+
+# using train function, method = &quot;nnet&quot; or method = &quot;avNNet&quot;
+data(solubility)
+tooHigh &lt;- findCorrelation(cor(solTrainXtrans), cutoff = 0.75)
+trainXnnet &lt;- solTrainXtrans[, -tooHigh]
+testXnnet &lt;- solTestXtrans[, -tooHigh]
+nnetGrid &lt;- expand.grid(.decay = c(0, 0.01, 0.1),
+                        .size = c(1:10),
+                        .bag = FALSE)
+ctrl &lt;- trainControl(method = &quot;cv&quot;, number = 10)
+set.seed(100)
+# nnetTune &lt;- train(trainXnnet, solTrainY,  # takes a long time to run
+#                   method = &quot;avNNet&quot;,
+#                   tuneGrid = nnetGrid,
+#                   trControl = ctrl,
+#                   preProcess = c(&quot;center&quot;, &quot;scale&quot;),
+#                   linout = TRUE,
+#                   trace = FALSE,
+#                   MaxNWts = 10 * (ncol(trainXnnet) + 1) + 10 + 1,
+#                   maxit = 500)
+
+### Multivariate Adaptive Regression Splines ###
+
+# using earth package
+marsFit &lt;- earth(solTrainXtrans, solTrainY)
+marsFit</code></pre>
+<pre><code>## Selected 40 of 47 terms, and 31 of 228 predictors
+## Termination condition: RSq changed by less than 0.001 at 47 terms
+## Importance: NumNonHAtoms, SurfaceArea2, MolWeight, SurfaceArea1, ...
+## Number of terms at each degree of interaction: 1 39 (additive model)
+## GCV 0.3873018    RSS 309.672    GRSq 0.9076346    RSq 0.9221793</code></pre>
+<pre class="r"><code>summary(marsFit)  # more details</code></pre>
+<pre><code>## Call: earth(x=solTrainXtrans, y=solTrainY)
+## 
+##                                 coefficients
+## (Intercept)                        -4.455949
+## FP002                               0.733904
+## FP003                              -0.203502
+## FP059                              -0.613495
+## FP065                              -0.278610
+## FP075                               0.295269
+## FP083                              -0.563202
+## FP085                              -0.193880
+## FP099                               0.337591
+## FP111                              -0.428246
+## FP135                               0.405277
+## FP142                               0.397119
+## FP154                              -0.597650
+## FP172                              -0.527362
+## FP176                               0.294774
+## FP188                               0.407757
+## FP202                               0.279390
+## FP204                              -0.336720
+## FP207                               0.424005
+## h(MolWeight-5.77157)               -1.964915
+## h(5.94458-MolWeight)                0.686131
+## h(2.99573-NumNonHAtoms)             2.755144
+## h(NumNonHAtoms-2.99573)            -3.517132
+## h(2.57858-NumNonHBonds)            -0.647484
+## h(0.79877-NumMultBonds)            -0.501790
+## h(2.19722-NumRotBonds)              0.120247
+## h(NumRotBonds-2.19722)             -2.709055
+## h(0.941208-NumDblBonds)             0.501773
+## h(2.48491-NumAromaticBonds)         0.492052
+## h(NumAromaticBonds-2.48491)        -2.811877
+## h(0.584815-NumNitrogen)            -1.593633
+## h(NumNitrogen-0.584815)             9.162309
+## h(1.38629-NumOxygen)               -0.730829
+## h(NumOxygen-1.38629)                3.358142
+## h(NumChlorine-0.46875)            -51.880014
+## h(-0.816625-HydrophilicFactor)     -0.374411
+## h(HydrophilicFactor- -0.816625)     0.196559
+## h(SurfaceArea1-1.9554)              0.148552
+## h(4.66178-SurfaceArea2)            -0.158472
+## h(SurfaceArea2-4.66178)            -0.168509
+## 
+## Selected 40 of 47 terms, and 31 of 228 predictors
+## Termination condition: RSq changed by less than 0.001 at 47 terms
+## Importance: NumNonHAtoms, SurfaceArea2, MolWeight, SurfaceArea1, ...
+## Number of terms at each degree of interaction: 1 39 (additive model)
+## GCV 0.3873018    RSS 309.672    GRSq 0.9076346    RSq 0.9221793</code></pre>
+<pre class="r"><code>plotmo(marsFit)</code></pre>
+<pre><code>##  plotmo grid:    FP001 FP002 FP003 FP004 FP005 FP006 FP007 FP008 FP009
+##                      0     1     0     1     1     0     0     0     0
+##  FP010 FP011 FP012 FP013 FP014 FP015 FP016 FP017 FP018 FP019 FP020 FP021
+##      0     0     0     0     0     1     0     0     0     0     0     0
+##  FP022 FP023 FP024 FP025 FP026 FP027 FP028 FP029 FP030 FP031 FP032 FP033
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP034 FP035 FP036 FP037 FP038 FP039 FP040 FP041 FP042 FP043 FP044 FP045
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP046 FP047 FP048 FP049 FP050 FP051 FP052 FP053 FP054 FP055 FP056 FP057
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP058 FP059 FP060 FP061 FP062 FP063 FP064 FP065 FP066 FP067 FP068 FP069
+##      0     0     0     0     0     0     0     1     1     0     0     0
+##  FP070 FP071 FP072 FP073 FP074 FP075 FP076 FP077 FP078 FP079 FP080 FP081
+##      0     0     1     0     0     0     0     0     0     1     0     0
+##  FP082 FP083 FP084 FP085 FP086 FP087 FP088 FP089 FP090 FP091 FP092 FP093
+##      1     0     0     0     0     1     0     0     0     0     0     0
+##  FP094 FP095 FP096 FP097 FP098 FP099 FP100 FP101 FP102 FP103 FP104 FP105
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP106 FP107 FP108 FP109 FP110 FP111 FP112 FP113 FP114 FP115 FP116 FP117
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP118 FP119 FP120 FP121 FP122 FP123 FP124 FP125 FP126 FP127 FP128 FP129
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP130 FP131 FP132 FP133 FP134 FP135 FP136 FP137 FP138 FP139 FP140 FP141
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP142 FP143 FP144 FP145 FP146 FP147 FP148 FP149 FP150 FP151 FP152 FP153
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP154 FP155 FP156 FP157 FP158 FP159 FP160 FP161 FP162 FP163 FP164 FP165
+##      0     0     0     0     0     0     0     0     0     0     1     0
+##  FP166 FP167 FP168 FP169 FP170 FP171 FP172 FP173 FP174 FP175 FP176 FP177
+##      0     0     1     0     0     0     0     0     0     0     0     0
+##  FP178 FP179 FP180 FP181 FP182 FP183 FP184 FP185 FP186 FP187 FP188 FP189
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP190 FP191 FP192 FP193 FP194 FP195 FP196 FP197 FP198 FP199 FP200 FP201
+##      0     0     0     0     0     0     0     0     0     0     0     0
+##  FP202 FP203 FP204 FP205 FP206 FP207 FP208 MolWeight NumAtoms NumNonHAtoms
+##      0     0     0     0     0     0     0  5.194234 3.135494     2.564949
+##  NumBonds NumNonHBonds NumMultBonds NumRotBonds NumDblBonds
+##  3.178054     3.351388     2.944766    1.098612   0.5670767
+##  NumAromaticBonds NumHydrogen NumCarbon NumNitrogen NumOxygen NumSulfer
+##           1.94591    3.691453  3.317541           0 0.6931472         0
+##  NumChlorine NumHalogen  NumRings HydrophilicFactor SurfaceArea1
+##            0          0 0.6931472        -0.3630242      7.25813
+##  SurfaceArea2
+##      7.759912</code></pre>
+<p><img src="regression-models_files/figure-html/ch7-1.png" width="672" /></p>
+<pre class="r"><code>evimp(marsFit)</code></pre>
+<pre><code>##                   nsubsets   gcv    rss
+## NumNonHAtoms            38  90.0   90.0
+## SurfaceArea2            38  90.0   90.0
+## MolWeight               37 100.0&gt; 100.0&gt;
+## SurfaceArea1            37  57.3   58.4
+## FP142                   35  45.2   46.7
+## FP204                   34  40.2   41.9
+## NumAromaticBonds        33  38.3   40.0
+## FP172                   32  36.1   37.9
+## NumOxygen               30  31.3   33.3
+## NumNonHBonds            29  29.1   31.2
+## FP135                   28  26.9   29.1
+## FP059                   27  25.0   27.3
+## NumNitrogen             26  23.4   25.8
+## FP083                   25  23.1   25.4
+## FP154                   24  21.8   24.1
+## FP002                   22  19.6   22.0
+## NumChlorine             19  17.6   19.9
+## FP207                   18  16.3   18.6
+## FP202                   17  15.4   17.8
+## NumRotBonds             16  14.6   17.0
+## NumDblBonds             15  13.8   16.1
+## FP188                   14  13.4   15.6
+## FP003                   13  13.0   15.0
+## FP099                   11  11.5   13.4
+## FP111                   10  10.6   12.6
+## NumMultBonds             8   8.6   10.6
+## HydrophilicFactor        7   8.0    9.8
+## FP065                    6   6.9    8.7
+## FP085                    5   5.7    7.6
+## FP075                    4   4.6    6.5
+## FP176                    3   3.5    5.3</code></pre>
+<pre class="r"><code># using train function
+marsGrid &lt;- expand.grid(.degree = 1:2, .nprune = 2:38)
+set.seed(100)
+# marsTuned &lt;- train(solTrainXtrans, solTrainY,  # also takes a long time to run
+#                    method = &quot;earth&quot;,
+#                    tuneGrid = marsGrid,
+#                    trControl = trainControl(method = &quot;cv&quot;))
+# marsSTuned
+# head(predict(marsTuned, solTestXtrans))
+# varImp(marsTuned)
+
+### Support Vector Machines ###
+
+# using kernlab
+trainingData &lt;- solTrainXtrans
+trainingData$Solubility &lt;- solTrainY
+svmFit &lt;- ksvm(Solubility ~., data = trainingData,
+               kernel =&quot;rbfdot&quot;, kpar = &quot;automatic&quot;,
+               C = 1, epsilon = 0.1)
+svmFit</code></pre>
+<pre><code>## Support Vector Machine object of class &quot;ksvm&quot; 
+## 
+## SV type: eps-svr  (regression) 
+##  parameter : epsilon = 0.1  cost C = 1 
+## 
+## Gaussian Radial Basis kernel function. 
+##  Hyperparameter : sigma =  0.00276299791797444 
+## 
+## Number of Support Vectors : 669 
+## 
+## Objective Function Value : -125.1328 
+## Training error : 0.041482</code></pre>
+<pre class="r"><code># using train function
+# svmRTuned &lt;- train(solTrainXtrans, solTrainY,
+#                    method = &quot;svmRadial&quot;,
+#                    preProcess = c(&quot;center&quot;, &quot;scale&quot;),
+#                    tuneLength = 14,  # 2^-2 to 2^11 cost values
+#                    trControl = trainControl(method = &quot;cv&quot;))
+# svmRTuned
+# svmRTuned$finalModel  
+
+### K-Nearest Neighbors ###
+
+# using the train function from caret
+knnDescr &lt;- solTrainXtrans[, -nearZeroVar(solTrainXtrans)]  # remove sparse and unbalanced fingerprints
+set.seed(100)
+knnTune &lt;- train(knnDescr,
+                 solTrainY,
+                 method = &quot;knn&quot;,
+                 preProcess = c(&quot;center&quot;, &quot;scale&quot;),
+                 tuneGrid = data.frame(.k = 1:20),
+                 trControl = trainControl(method = &quot;cv&quot;))
+# new data will be auto centered and scaled when using knn model object for prediction
+knnTune</code></pre>
+<pre><code>## k-Nearest Neighbors 
+## 
+## 951 samples
+## 225 predictors
+## 
+## Pre-processing: centered (225), scaled (225) 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 856, 856, 855, 855, 857, 856, ... 
+## Resampling results across tuning parameters:
+## 
+##   k   RMSE      Rsquared   MAE      
+##    1  1.250232  0.6611312  0.9165221
+##    2  1.103952  0.7197662  0.7988127
+##    3  1.065688  0.7350824  0.7903996
+##    4  1.043534  0.7449116  0.7860586
+##    5  1.049529  0.7409384  0.7889923
+##    6  1.058417  0.7359120  0.7986353
+##    7  1.060938  0.7331595  0.7980003
+##    8  1.055874  0.7358010  0.7974424
+##    9  1.065884  0.7311823  0.8082185
+##   10  1.070847  0.7286249  0.8134830
+##   11  1.069596  0.7302802  0.8124852
+##   12  1.076953  0.7269775  0.8202945
+##   13  1.088453  0.7204797  0.8318907
+##   14  1.093359  0.7181335  0.8380720
+##   15  1.100073  0.7149682  0.8461514
+##   16  1.104751  0.7127331  0.8533856
+##   17  1.109370  0.7101825  0.8581988
+##   18  1.119957  0.7059283  0.8669092
+##   19  1.127248  0.7024141  0.8742935
+##   20  1.132476  0.6998827  0.8761286
+## 
+## RMSE was used to select the optimal model using the smallest value.
+## The final value used for the model was k = 4.</code></pre>
+</div>
+<div id="chapter-8-regression-trees-and-rule-based-models" class="section level3">
+<h3>Chapter 8: Regression Trees and Rule-Based Models</h3>
+<pre class="r"><code>rm(list = ls())
+#
+#</code></pre>
+</div>
+<div id="chapter-9-a-summary-of-solubility-models" class="section level3">
+<h3>Chapter 9: A Summary of Solubility Models</h3>
+<pre class="r"><code>rm(list = ls())
+#
+#</code></pre>
+</div>
+<div id="chapter-10-case-study-compressive-strength-of-concrete-mixtures" class="section level3">
+<h3>Chapter 10: Case Study: Compressive Strength of Concrete Mixtures</h3>
+<pre class="r"><code>rm(list = ls())
+#
+#</code></pre>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

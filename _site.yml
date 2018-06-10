@@ -12,5 +12,15 @@ navbar:
   left:
     - text: "Notes"
       href: index.html
+    - text: "Computation"
+      menu: 
+        - text: "General Strategies"
+          href: general-strategies.html
+        - text: "Regression Models"
+          href: regression-models.html
+        - text: "Classification Models"
+          href: classification-models.html
+        - text: "Other Considerations"
+          href: other-considerations.html
     - text: "Solutions"
       href: solutions.html

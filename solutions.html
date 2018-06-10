@@ -11,7 +11,7 @@
 
 
 
-<title>Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Student Solutions</title>
+<title>APM Student Solutions (Ch 3 &amp; 4)</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -278,6 +278,27 @@ div.tocify {
         <li>
   <a href="index.html">Notes</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Computation
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="general-strategies.html">General Strategies</a>
+    </li>
+    <li>
+      <a href="regression-models.html">Regression Models</a>
+    </li>
+    <li>
+      <a href="classification-models.html">Classification Models</a>
+    </li>
+    <li>
+      <a href="other-considerations.html">Other Considerations</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="solutions.html">Solutions</a>
 </li>
@@ -293,7 +314,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Applied Predictive Modeling (2013) by Kjell Johnson and Max Kuhn – Student Solutions</h1>
+<h1 class="title toc-ignore">APM Student Solutions (Ch 3 &amp; 4)</h1>
 
 </div>
 
@@ -302,7 +323,7 @@ div.tocify {
 <h2>General Strategies</h2>
 <div id="exercise-3.1" class="section level3">
 <h3>Exercise 3.1</h3>
-<pre class="r"><code>library(mlbench)
+<pre class="r"><code>require(mlbench)
 data(Glass)
 str(Glass)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    214 obs. of  10 variables:
@@ -318,9 +339,9 @@ str(Glass)</code></pre>
 ##  $ Type: Factor w/ 6 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;5&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
 <pre class="r"><code># (a) visualizations
 pairs(Glass[,-10])</code></pre>
-<p><img src="solutions_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<pre class="r"><code>library(tidyverse)
-library(ggplot2)
+<p><img src="solutions_files/figure-html/ex3.1-1.png" width="672" /></p>
+<pre class="r"><code>require(tidyverse)
+require(ggplot2)
 
 Glass[, -10] %&gt;% gather() %&gt;% head()  # check</code></pre>
 <pre><code>##   key   value
@@ -333,8 +354,8 @@ Glass[, -10] %&gt;% gather() %&gt;% head()  # check</code></pre>
 <pre class="r"><code>ggplot(gather(Glass[, -10]), aes(value)) +
   geom_histogram(bins = 10) +
   facet_wrap(~key, scales = &quot;free_x&quot;)</code></pre>
-<p><img src="solutions_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
-<pre class="r"><code>library(corrplot)
+<p><img src="solutions_files/figure-html/ex3.1-2.png" width="672" /></p>
+<pre class="r"><code>require(corrplot)
 correlations &lt;- cor(Glass[, -10])
 correlations</code></pre>
 <pre><code>##               RI          Na           Mg          Al          Si
@@ -358,10 +379,10 @@ correlations</code></pre>
 ## Ba -0.042618059 -0.1128410  1.0000000000 -0.058691755
 ## Fe -0.007719049  0.1249682 -0.0586917554  1.000000000</code></pre>
 <pre class="r"><code>corrplot(correlations, order = &quot;hclust&quot;)</code></pre>
-<p><img src="solutions_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
+<p><img src="solutions_files/figure-html/ex3.1-3.png" width="672" /></p>
 <pre class="r"><code># (b) outliers / skewness
 # there seems to be an outlier for K and possibly for Fe
-library(e1071)
+require(e1071)
 apply(Glass[, -10], 2, skewness)  # definitely skewed</code></pre>
 <pre><code>##         RI         Na         Mg         Al         Si          K 
 ##  1.6027151  0.4478343 -1.1364523  0.8946104 -0.7202392  6.4600889 
@@ -369,7 +390,7 @@ apply(Glass[, -10], 2, skewness)  # definitely skewed</code></pre>
 ##  2.0184463  3.3686800  1.7298107</code></pre>
 <pre class="r"><code># (c) relevant transformations
 # apply box cox to skewed predictors
-library(caret)
+require(caret)
 RITrans &lt;- BoxCoxTrans(Glass$RI)
 RITrans</code></pre>
 <pre><code>## Box-Cox Transformation
@@ -389,7 +410,7 @@ RITrans</code></pre>
 </div>
 <div id="exercise-3.2" class="section level3">
 <h3>Exercise 3.2</h3>
-<pre class="r"><code>library(mlbench)
+<pre class="r"><code>require(mlbench)
 data(&quot;Soybean&quot;)
 str(Soybean)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    683 obs. of  36 variables:
@@ -430,7 +451,7 @@ str(Soybean)</code></pre>
 ##  $ shriveling     : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ roots          : Factor w/ 3 levels &quot;0&quot;,&quot;1&quot;,&quot;2&quot;: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
 <pre class="r"><code># (a) category frequencies
-library(caret)
+require(caret)
 nearZeroVar(Soybean, saveMetrics = TRUE)</code></pre>
 <pre><code>##                  freqRatio percentUnique zeroVar   nzv
 ## Class             1.010989     2.7818448   FALSE FALSE
@@ -485,7 +506,7 @@ nearZeroVar(Soybean, saveMetrics = TRUE)</code></pre>
 ##   0   1 
 ## 625  20</code></pre>
 <pre class="r"><code># (b) missing data patterns
-library(mice)
+require(mice)
 md.pattern(Soybean)  # 562 of 683 have values for all cols</code></pre>
 <pre><code>##     Class leaves date area.dam crop.hist plant.growth stem temp roots
 ## 562     1      1    1        1         1            1    1    1     1
@@ -570,10 +591,8 @@ md.pattern(Soybean) %&gt;% colnames  # col names from most to least filled out</
 ## [37] &quot;&quot;</code></pre>
 <pre class="r"><code># (c) handle missing values 
 soy_data &lt;- Soybean[, -nearZeroVar(Soybean)]  # drop 3 cols
-preProcValues &lt;- preProcess(soy_data, method = c(&quot;knnImpute&quot;))  # doesn&#39;t work bc of categorical vars?</code></pre>
-<pre><code>## Warning in pre_process_options(method, column_types): The following pre-
-## processing methods were eliminated: &#39;knnImpute&#39;, &#39;center&#39;, &#39;scale&#39;</code></pre>
-<pre class="r"><code>soy_data_imputed &lt;- mice(soy_data, method = &quot;pmm&quot;, seed = 500)</code></pre>
+preProcValues &lt;- preProcess(soy_data, method = c(&quot;knnImpute&quot;))  # doesn&#39;t work bc of categorical vars?
+soy_data_imputed &lt;- mice(soy_data, method = &quot;pmm&quot;, seed = 500)</code></pre>
 <pre><code>## 
 ##  iter imp variable
 ##   1   1  date  plant.stand  precip  temp  hail  crop.hist  area.dam  sever  seed.tmt  germ  plant.growth  leaf.halo  leaf.marg  leaf.size  leaf.shread  leaf.malf  stem  lodging  stem.cankers  canker.lesion  fruiting.bodies  ext.decay  int.discolor  fruit.pods  fruit.spots  seed  mold.growth  seed.discolor  seed.size  shriveling  roots
@@ -605,12 +624,12 @@ preProcValues &lt;- preProcess(soy_data, method = c(&quot;knnImpute&quot;))  # d
 <div id="exercise-3.3" class="section level3">
 <h3>Exercise 3.3</h3>
 <pre class="r"><code># (a) category frequencies
-library(caret)
+require(caret)
 data(BloodBrain)
 
 # (b) degenerate distributions
 # assume this means dist with near zero variance
-library(magrittr)
+require(magrittr)
 sapply(bbbDescr[,nearZeroVar(bbbDescr)], table)</code></pre>
 <pre><code>## $negative
 ## 
@@ -762,45 +781,6 @@ diff(binom.test(20 * test_accuracy, 20)[[&quot;conf.int&quot;]])</code></pre>
 <pre><code>## [1] 0.1651871</code></pre>
 <pre class="r"><code>diff(binom.test(1000 * test_accuracy, 1000)[[&quot;conf.int&quot;]])</code></pre>
 <pre><code>## [1] 0.0505388</code></pre>
-</div>
-</div>
-<div id="regression-models" class="section level2">
-<h2>Regression Models</h2>
-<div id="exercise-6" class="section level3">
-<h3>Exercise 6</h3>
-</div>
-<div id="exercise-7" class="section level3">
-<h3>Exercise 7</h3>
-</div>
-<div id="exercise-8" class="section level3">
-<h3>Exercise 8</h3>
-</div>
-</div>
-<div id="classification-models" class="section level2">
-<h2>Classification Models</h2>
-<div id="exercise-12" class="section level3">
-<h3>Exercise 12</h3>
-</div>
-<div id="exercise-13" class="section level3">
-<h3>Exercise 13</h3>
-</div>
-<div id="exercise-14" class="section level3">
-<h3>Exercise 14</h3>
-</div>
-<div id="exercise-16" class="section level3">
-<h3>Exercise 16</h3>
-</div>
-</div>
-<div id="other-considerations" class="section level2">
-<h2>Other Considerations</h2>
-<div id="exercise-18" class="section level3">
-<h3>Exercise 18</h3>
-</div>
-<div id="exercise-19" class="section level3">
-<h3>Exercise 19</h3>
-</div>
-<div id="exercise-20" class="section level3">
-<h3>Exercise 20</h3>
 </div>
 </div>
 

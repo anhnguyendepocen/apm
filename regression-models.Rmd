@@ -1,0 +1,280 @@
+---
+title: "APM Computation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+## Regression Models
+
+### Chapter 5: Measuring Performance in Regression Models
+
+```{r ch5, message=FALSE, warning=FALSE}
+rm(list=ls())
+observed <-  c(0.22, 0.83,-0.12, 0.89,-0.23,-1.30,-0.15,-1.4,
+               0.62, 0.99,-0.18, 0.32, 0.34,-0.30, 0.04,-0.87,
+               0.55,-1.30,-1.15, 0.20)
+predicted <- c(0.24, 0.78,-0.66, 0.53, 0.70,-0.75,-0.41,-0.43,
+               0.49, 0.79,-1.19, 0.06, 0.75,-0.07, 0.43,-0.42,
+              -0.25,-0.64,-1.26,-0.07)
+residualValues <- observed - predicted
+summary(residualValues)
+
+# observed versus predicted
+axisRange <- extendrange(c(observed, predicted))
+plot(observed, predicted, ylim = axisRange, xlim = axisRange)
+abline(0, 1, col = "darkgrey", lty = 2)
+
+# predicted versus residuals
+plot(predicted, residualValues, ylab = "residual")
+abline(h = 0, col = "darkgrey", lty = 2)
+
+# quantitative model performance measures
+library(caret)
+R2(predicted, observed)
+RMSE(predicted, observed)
+cor(predicted, observed)  # base R simple correlation
+cor(predicted, observed)^2  # match R^2
+cor(predicted, observed, method = "spearman")  # rank correlation
+```
+
+
+### Chapter 6: Linear Regression and Its Cousins
+
+```{r ch6, message=FALSE, warning=FALSE}
+rm(list = ls())
+require(AppliedPredictiveModeling)
+require(elasticnet)
+require(lars)
+require(caret)
+require(MASS)
+require(pls)
+require(stats)
+data(solubility)
+ls(pattern = "^sol")  # obj beginning w "sol"
+trainingData <- solTrainXtrans
+trainingData$Solubility <- solTrainY
+
+### Ordinary Linear Regression ###
+
+lmFitAllPredictors <- lm(Solubility ~., data = trainingData)
+str(summary(lmFitAllPredictors))  # training results
+lmPred1 <- predict(lmFitAllPredictors, solTestXtrans)
+head(lmPred1)
+lmValues1 <- data.frame(obs = solTestY, pred = lmPred1)
+defaultSummary(lmValues1)  # caret metrics
+
+# using robust lm from MASS (uses Huber approach)
+ctrl <- trainControl(method = "cv", number = 10)
+set.seed(100)  
+lmFit1 <- train(x = solTrainXtrans, y = solTrainY,
+                method = "lm", trControl = ctrl)
+lmFit1
+xyplot(solTrainY ~ predict(lmFit1),
+       # plot points and use background grid
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Observed")
+xyplot(resid(lmFit1) ~ predict(lmFit1),
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Residuals")
+
+# using train function
+corThresh <- 0.9
+tooHigh <- findCorrelation(cor(solTrainXtrans), corThresh)
+corrPred <- names(solTrainXtrans)[tooHigh]
+trainXfiltered <- solTrainXtrans[, -tooHigh]
+testXfiltered <- solTestXtrans[, -tooHigh]
+set.seed(100)
+lmFiltered <- train(trainXfiltered, solTrainY, method = "lm", trControl = ctrl)
+lmFiltered
+rlmPCA <- train(trainXfiltered, solTrainY, method = "rlm", preProcess = "pca", trControl = ctrl)
+rlmPCA
+
+### Partial Least Squares ###
+plsFit <- plsr(Solubility ~., data = trainingData)
+predict(plsFit, solTestXtrans[1:5,], ncomp = 1:2)
+
+# using train function
+plsTune <- train(solTrainXtrans, solTrainY,
+                 method = "pls", 
+                 tuneLength = 20,  # default tuning grid evals 1:tuneLength
+                 trControl = ctrl,
+                 preProcess = c("center", "scale"))
+plsTune
+
+### Penalized Regression Models ###
+
+# ridge; lm.ridge from MASS or enet from elasticnet
+ridgeModel <- enet(x = as.matrix(solTrainXtrans), y = solTrainY, 
+                   lambda = 0.001)  # this is ridge penalty
+ridgePred <- predict(ridgeModel, newx = as.matrix(solTestXtrans),
+                     s = 1, mode = "fraction",  # s=1 is full solution. lasso lamba=0 so this is ridge regression
+                     type = "fit")
+head(ridgePred$fit)
+
+# defining tuning grid
+ridgeGrid <- data.frame(.lambda = seq(0, 0.1, length = 15))
+set.seed(100)
+ridgeRegFit <- train(solTrainXtrans, solTrainY,
+                     method = "ridge",
+                     tuneGrid = ridgeGrid,
+                     trControl = ctrl,
+                     preProcess = c("center", "scale"))
+ridgeRegFit
+
+# lasso: lars from lars or enet from elasticnet or glmnet
+enetModel <- enet(x = as.matrix(solTrainXtrans), y = solTrainY,
+                  lambda = 0.01, normalize = TRUE)  # normalize does center and scale
+enetPred <- predict(enetModel, newx = as.matrix(solTestXtrans),
+                    s = 0.1, mode = "fraction",
+                    type = "fit")
+names(enetPred)
+head(enetPred$fit)
+enetCoef <- predict(enetModel, newx = as.matrix(solTestXtrans),
+                    s = 0.1, mode = "fraction",
+                    type = "coefficients")
+
+tail(enetCoef$coefficients)
+
+# using train function for lasso
+enetGrid <- expand.grid(.lambda = c(0, 0.01, 0.1),
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(100)
+enetTune <- train(solTrainXtrans, solTrainY,
+                  method = "enet",
+                  tuneGrid = enetGrid,
+                  trControl = ctrl,
+                  preProcess = c("center", "scale"))
+plot(enetTune)
+```
+
+### Chapter 7: Nonlinear Regression Models
+
+```{r ch7, message=FALSE, warning=FALSE}
+rm(list = ls())
+require(AppliedPredictiveModeling)
+require(caret)
+require(earth)
+require(kernlab)
+require(nnet)
+
+### Neural Networks ###
+
+# using nnet
+# nnetFit <- nnet(predictors, outcome, 
+#                 size = 5,
+#                 decay = 0.01,
+#                 linout = TRUE,
+#                 trace = FALSE, 
+#                 maxit = 500,
+#                 MaxNwts = 5 * (ncol(predictors) + 1) + 5 + 1)
+# nnetAvg <- avNNet(predictors, outcome, 
+#                 size = 5,
+#                 decay = 0.01,
+#                 linout = TRUE,
+#                 trace = FALSE, 
+#                 maxit = 500,
+#                 MaxNwts = 5 * (ncol(predictors) + 1) + 5 + 1)
+# predict(nnetFit, newData)
+# predict(nnetAvg, newData)
+
+# using train function, method = "nnet" or method = "avNNet"
+data(solubility)
+tooHigh <- findCorrelation(cor(solTrainXtrans), cutoff = 0.75)
+trainXnnet <- solTrainXtrans[, -tooHigh]
+testXnnet <- solTestXtrans[, -tooHigh]
+nnetGrid <- expand.grid(.decay = c(0, 0.01, 0.1),
+                        .size = c(1:10),
+                        .bag = FALSE)
+ctrl <- trainControl(method = "cv", number = 10)
+set.seed(100)
+# nnetTune <- train(trainXnnet, solTrainY,  # takes a long time to run
+#                   method = "avNNet",
+#                   tuneGrid = nnetGrid,
+#                   trControl = ctrl,
+#                   preProcess = c("center", "scale"),
+#                   linout = TRUE,
+#                   trace = FALSE,
+#                   MaxNWts = 10 * (ncol(trainXnnet) + 1) + 10 + 1,
+#                   maxit = 500)
+
+### Multivariate Adaptive Regression Splines ###
+
+# using earth package
+marsFit <- earth(solTrainXtrans, solTrainY)
+marsFit
+summary(marsFit)  # more details
+plotmo(marsFit)
+evimp(marsFit)
+
+# using train function
+marsGrid <- expand.grid(.degree = 1:2, .nprune = 2:38)
+set.seed(100)
+# marsTuned <- train(solTrainXtrans, solTrainY,  # also takes a long time to run
+#                    method = "earth",
+#                    tuneGrid = marsGrid,
+#                    trControl = trainControl(method = "cv"))
+# marsSTuned
+# head(predict(marsTuned, solTestXtrans))
+# varImp(marsTuned)
+
+### Support Vector Machines ###
+
+# using kernlab
+trainingData <- solTrainXtrans
+trainingData$Solubility <- solTrainY
+svmFit <- ksvm(Solubility ~., data = trainingData,
+               kernel ="rbfdot", kpar = "automatic",
+               C = 1, epsilon = 0.1)
+svmFit
+
+# using train function
+# svmRTuned <- train(solTrainXtrans, solTrainY,
+#                    method = "svmRadial",
+#                    preProcess = c("center", "scale"),
+#                    tuneLength = 14,  # 2^-2 to 2^11 cost values
+#                    trControl = trainControl(method = "cv"))
+# svmRTuned
+# svmRTuned$finalModel  
+
+### K-Nearest Neighbors ###
+
+# using the train function from caret
+knnDescr <- solTrainXtrans[, -nearZeroVar(solTrainXtrans)]  # remove sparse and unbalanced fingerprints
+set.seed(100)
+knnTune <- train(knnDescr,
+                 solTrainY,
+                 method = "knn",
+                 preProcess = c("center", "scale"),
+                 tuneGrid = data.frame(.k = 1:20),
+                 trControl = trainControl(method = "cv"))
+# new data will be auto centered and scaled when using knn model object for prediction
+knnTune
+```
+
+### Chapter 8: Regression Trees and Rule-Based Models
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 9: A Summary of Solubility Models
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 10: Case Study: Compressive Strength of Concrete Mixtures
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+

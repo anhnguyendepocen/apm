@@ -1,0 +1,35 @@
+---
+title: "APM Computation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+## Other Considerations
+
+### Chapter 18: Measuring Predictor Importance
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 19: An Introduction to Feature Selection
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 20: Factors That Can Affect Model Performance
+
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+#
+#
+```
+

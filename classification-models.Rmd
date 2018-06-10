@@ -1,0 +1,67 @@
+---
+title: "APM Computation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+## Classification Models
+
+### Chapter 11: Measuring Performance in Classification Models
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 12: Discriminant Analysis and Other Linear Classification Models
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 13: Nonlinear Classification Models
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 14: Classification Trees and Rule-Based Models
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 15: A Summary of Grant Application Models
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 16: Remedies of Severe Class Imbalance
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
+### Chapter 17: Case Study: Job Scheduling
+
+```{r, warnings=FALSE, message=FALSE}
+rm(list = ls())
+#
+#
+```
+
