@@ -919,20 +919,438 @@ knnTune</code></pre>
 <div id="chapter-8-regression-trees-and-rule-based-models" class="section level3">
 <h3>Chapter 8: Regression Trees and Rule-Based Models</h3>
 <pre class="r"><code>rm(list = ls())
-#
-#</code></pre>
-</div>
-<div id="chapter-9-a-summary-of-solubility-models" class="section level3">
-<h3>Chapter 9: A Summary of Solubility Models</h3>
-<pre class="r"><code>rm(list = ls())
-#
-#</code></pre>
+library(caret)
+library(Cubist)
+library(gbm)
+library(ipred)
+library(party)
+library(partykit)
+library(randomForest)
+library(rpart)
+library(RWeka)
+library(AppliedPredictiveModeling)
+data(solubility)
+trainingData &lt;- solTrainXtrans
+trainingData$Solubility &lt;- solTrainY
+
+### Single Trees ###
+
+# rpart uses CART
+set.seed(100)
+rpartTune &lt;- train(solTrainXtrans, solTrainY,
+                   method = &quot;rpart2&quot;,  # use rpart to tune over complexity parameter, rpart2 tune over maxdepth
+                   tuneLength = 10,
+                   trControl = trainControl(method= &quot;cv&quot;))
+plot(rpartTune)</code></pre>
+<p><img src="regression-models_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code># ctree in party uses conditional inference
+# use ctree_control to tune parameters
+
+### Model Trees ###
+
+# use method = &quot;M5&quot; in caret or RWeka
+# set.seed(100)
+# m5Tune &lt;- train(solTrainXtrans, solTrainY,
+#                 method = &quot;M5&quot;,
+#                 trControl = trainControl(method = &quot;cv&quot;),
+#                 control =  Weka_control(M = 10))
+# plot(m5Tune)
+
+### Bagged Trees ###
+
+# ipred: bagging, ipredbagg
+# RWeka: Baggin
+# caret: method = bag
+# party: cforest set mtry equal to total number of predictors
+
+### Random Forest ###
+
+# randomForest
+# can&#39;t use with missing data
+rfModel &lt;- randomForest(solTrainXtrans, solTrainY,
+                        importance = TRUE,
+                        ntrees = 1000)
+head(varImp(rfModel))  # caret wrapper for variable importance</code></pre>
+<pre><code>##        Overall
+## FP001 4.344181
+## FP002 3.916990
+## FP003 5.420408
+## FP004 5.674667
+## FP005 4.445544
+## FP006 5.573001</code></pre>
+<pre class="r"><code>### Boosted Trees ###
+
+# gbm 
+gbmModel &lt;- gbm.fit(solTrainXtrans, solTrainY, distribution = &quot;gaussian&quot;)</code></pre>
+<pre><code>## Iter   TrainDeviance   ValidDeviance   StepSize   Improve
+##      1        4.1811             nan     0.0010    0.0031
+##      2        4.1783             nan     0.0010    0.0029
+##      3        4.1750             nan     0.0010    0.0029
+##      4        4.1720             nan     0.0010    0.0032
+##      5        4.1689             nan     0.0010    0.0031
+##      6        4.1658             nan     0.0010    0.0030
+##      7        4.1628             nan     0.0010    0.0029
+##      8        4.1598             nan     0.0010    0.0027
+##      9        4.1568             nan     0.0010    0.0031
+##     10        4.1537             nan     0.0010    0.0030
+##     20        4.1243             nan     0.0010    0.0030
+##     40        4.0654             nan     0.0010    0.0029
+##     60        4.0092             nan     0.0010    0.0027
+##     80        3.9550             nan     0.0010    0.0026
+##    100        3.9016             nan     0.0010    0.0026</code></pre>
+<pre class="r"><code># use gaussian distribution for continuous response
+
+# tuning with caret
+# gbmGrid &lt;- expand.grid(.interaction.depth = seq(1, 7, by = 2),
+#                        .n.trees = seq(100, 1000, by = 50),
+#                        .shrinkage = c(0.01, 0.1))  # need to add n.minobsinnode
+# set.seed(100)
+# gbmTune &lt;- train(solTrainXtrans, solTrainY,
+#                  method = &quot;gbm&quot;,
+#                  tuneGrid = gbmGrid,
+#                  verbose = FALSE)
+
+### Cubist ###
+
+cubistMod &lt;- cubist(solTrainXtrans, solTrainY)
+# predict(cubistMod, solTestXtrans)  # use neighbors agument to pass 0-9 integer to adjust predictions
+summary(cubistMod)</code></pre>
+<pre><code>## 
+## Call:
+## cubist.default(x = solTrainXtrans, y = solTrainY)
+## 
+## 
+## Cubist [Release 2.07 GPL Edition]  Mon Jun 25 09:16:43 2018
+## ---------------------------------
+## 
+##     Target attribute `outcome&#39;
+## 
+## Read 951 cases (229 attributes) from undefined.data
+## 
+## Model:
+## 
+##   Rule 1: [52 cases, mean -5.752, range -11.62 to -2.09, est err 0.603]
+## 
+##     if
+##  MolWeight &gt; 5.890234
+##  SurfaceArea2 &lt;= 13.23537
+##     then
+##  outcome = 8.148 - 5.77 NumNonHBonds - 10.79 NumAtoms + 8 NumNonHAtoms
+##            + 6.31 NumBonds + 0.92 NumHydrogen + 0.24 SurfaceArea1
+##            + 0.67 NumCarbon - 0.34 NumMultBonds - 1.06 MolWeight
+##            + 0.8 NumRings + 0.28 NumAromaticBonds + 0.74 FP142
+##            + 0.042 SurfaceArea2 - 0.39 FP172 + 0.22 NumOxygen
+##            - 0.7 NumHalogen - 0.26 FP065 + 0.36 FP173 - 0.28 FP094
+##            + 0.24 FP066 + 0.28 FP102 + 0.24 FP092 - 0.26 NumDblBonds
+##            - 0.22 FP081 + 0.31 FP053 - 0.18 FP003 + 0.2 FP088 + 0.2 FP101
+##            + 0.19 FP099 + 0.2 FP116 + 0.25 FP147 + 0.16 FP046
+##            - 0.17 FP085 + 0.14 FP082 + 0.13 FP071 + 0.13 FP080
+## 
+##   Rule 2: [24 cases, mean -3.943, range -6.7 to -0.5, est err 0.795]
+## 
+##     if
+##  MolWeight &gt; 5.890234
+##  SurfaceArea2 &gt; 13.23537
+##     then
+##  outcome = 12.334 - 3.92 MolWeight + 0.386 SurfaceArea1
+##            + 0.21 SurfaceArea2 - 1.63 NumAtoms - 0.83 NumNonHBonds
+##            + 1.32 NumNonHAtoms + 0.91 NumBonds + 0.13 NumHydrogen
+##            + 0.1 NumCarbon - 0.05 NumMultBonds + 0.12 NumRings
+##            + 0.04 NumAromaticBonds + 0.11 FP142 - 0.1 NumHalogen
+## 
+##   Rule 3: [375 cases, mean -3.107, range -8.8 to 1.11, est err 0.497]
+## 
+##     if
+##  MolWeight &lt;= 5.890234
+##  HydrophilicFactor &lt;= -0.6934879
+##     then
+##  outcome = 11.608 - 24.37 NumAtoms + 17.57 NumNonHAtoms
+##            - 8.82 NumNonHBonds + 15.61 NumBonds + 2.11 NumHydrogen
+##            - 2.06 MolWeight + 0.217 SurfaceArea1 + 0.83 HydrophilicFactor
+##            + 0.62 NumRings + 0.75 FP102 - 0.17 NumMultBonds
+##            - 0.29 NumRotBonds - 0.61 FP141 + 0.48 FP116 + 0.53 FP173
+##            + 0.36 FP168 + 0.13 NumAromaticBonds - 0.8 NumChlorine
+##            + 0.28 FP080 + 0.13 NumCarbon + 0.35 FP142 - 0.5 NumHalogen
+##            + 0.2 FP046 - 0.018 SurfaceArea2 + 0.18 FP092 + 0.12 NumOxygen
+##            - 0.13 FP065 + 0.13 FP066 - 0.15 FP094 + 0.15 FP099
+##            - 0.17 FP172 + 0.14 FP101 - 0.15 NumDblBonds - 0.12 FP081
+##            + 0.16 FP053 + 0.1 FP088 - 0.06 FP112
+## 
+##   Rule 4: [120 cases, mean -2.743, range -6.81 to 1.09, est err 0.624]
+## 
+##     if
+##  FP043 &lt;= 0
+##  MolWeight &lt;= 5.890234
+##  NumRotBonds &gt; 1.386294
+##  NumOxygen &gt; 0.6931472
+##     then
+##  outcome = 26.218 - 40.17 NumAtoms + 29.76 NumBonds + 3.44 NumHydrogen
+##            + 2.24 NumOxygen - 1.17 NumCarbon + 0.248 SurfaceArea1
+##            - 1.34 NumRotBonds - 2.01 MolWeight + 1.81 NumNonHAtoms
+##            + 0.96 FP142 - 0.33 NumNonHBonds + 0.35 NumRings
+##            - 0.006 SurfaceArea2 + 0.06 FP099 - 0.06 NumDblBonds
+##            + 0.09 FP043 + 0.02 HydrophilicFactor
+## 
+##   Rule 5: [14 cases, mean -2.442, range -4.16 to -0.02, est err 0.464]
+## 
+##     if
+##  FP043 &gt; 0
+##  MolWeight &lt;= 5.890234
+##  NumOxygen &gt; 0.6931472
+##  HydrophilicFactor &gt; -0.6934879
+##     then
+##  outcome = 30.304 - 4.53 MolWeight - 7.87 NumNitrogen - 2.2 NumOxygen
+## 
+##   Rule 6: [235 cases, mean -2.041, range -6.02 to 1.22, est err 0.474]
+## 
+##     if
+##  FP043 &lt;= 0
+##  MolWeight &lt;= 5.890234
+##  NumRotBonds &lt;= 1.386294
+##  NumOxygen &gt; 0.6931472
+##     then
+##  outcome = 0.921 - 7.65 NumNonHBonds + 8.4 NumNonHAtoms - 6.07 NumAtoms
+##            + 5.52 NumBonds + 2.18 NumRings + 1.33 NumOxygen
+##            + 0.148 SurfaceArea1 + 0.39 NumHydrogen - 0.61 MolWeight
+##            + 0.62 FP142 - 0.29 FP094 + 0.12 NumCarbon
+##            + 0.11 HydrophilicFactor + 0.46 FP043 - 0.26 FP112
+##            + 0.36 NumNitrogen - 0.021 SurfaceArea2 + 0.29 FP147
+##            - 0.05 NumMultBonds + 0.2 FP099 - 0.2 NumDblBonds + 0.17 FP113
+##            - 0.15 FP081 + 0.08 NumRotBonds - 0.14 FP172 - 0.1 FP065
+##            - 0.14 FP048 + 0.2 NumHalogen + 0.12 FP028 + 0.07 FP066
+##            + 0.07 FP202 + 0.06 FP046 + 0.07 FP109 + 0.08 FP131
+##            + 0.05 FP088
+## 
+##   Rule 7: [215 cases, mean -1.813, range -7.42 to 1.58, est err 0.533]
+## 
+##     if
+##  MolWeight &lt;= 5.890234
+##  NumOxygen &lt;= 0.6931472
+##  HydrophilicFactor &gt; -0.6934879
+##     then
+##  outcome = 1.419 - 12.83 NumNonHBonds + 20.16 NumNonHAtoms
+##            - 9.47 NumAtoms + 6.53 NumBonds + 3.41 NumRings
+##            - 1.79 MolWeight + 0.71 NumHydrogen + 0.96 NumOxygen
+##            + 0.113 SurfaceArea1 - 0.14 NumMultBonds + 0.84 NumNitrogen
+##            - 0.044 SurfaceArea2 + 0.49 FP099 + 0.62 FP142 - 0.3 FP081
+##            - 0.34 NumDblBonds + 0.38 FP043 - 0.25 FP172 - 0.18 FP065
+##            - 0.2 FP094 + 0.11 NumRotBonds + 0.06 NumAromaticBonds
+##            - 0.16 FP112 - 0.19 FP048 + 0.3 NumHalogen + 0.17 FP147
+##            + 0.13 FP113 + 0.05 NumCarbon + 0.11 FP088 + 0.15 FP028
+##            + 0.1 FP102 + 0.09 FP202 + 0.09 FP109 - 0.07 FP066
+##            + 0.08 FP101 + 0.09 FP173 - 0.03 HydrophilicFactor
+##            - 0.09 FP141 + 0.08 FP053
+## 
+## 
+## Evaluation on training data (951 cases):
+## 
+##     Average  |error|              0.495
+##     Relative |error|               0.31
+##     Correlation coefficient        0.95
+## 
+## 
+##  Attribute usage:
+##    Conds  Model
+## 
+##    100%   100%    MolWeight
+##     58%    91%    HydrophilicFactor
+##     56%    98%    NumOxygen
+##     36%    55%    FP043
+##     34%    91%    NumRotBonds
+##      7%    99%    SurfaceArea2
+##            99%    FP142
+##            99%    NumAtoms
+##            99%    NumNonHAtoms
+##            99%    NumBonds
+##            99%    NumNonHBonds
+##            99%    NumHydrogen
+##            99%    NumCarbon
+##            99%    NumRings
+##            99%    SurfaceArea1
+##            96%    FP099
+##            96%    NumDblBonds
+##            87%    NumMultBonds
+##            87%    NumHalogen
+##            85%    FP065
+##            85%    FP066
+##            85%    FP081
+##            85%    FP088
+##            85%    FP094
+##            85%    FP172
+##            80%    FP112
+##            64%    NumAromaticBonds
+##            64%    FP046
+##            62%    FP053
+##            62%    FP101
+##            62%    FP102
+##            62%    FP173
+##            57%    FP141
+##            49%    FP147
+##            45%    NumNitrogen
+##            43%    FP028
+##            43%    FP048
+##            43%    FP109
+##            43%    FP113
+##            43%    FP202
+##            41%    FP080
+##            41%    FP092
+##            41%    FP116
+##            36%    FP168
+##            36%    NumChlorine
+##            23%    FP131
+##             5%    FP003
+##             5%    FP071
+##             5%    FP082
+##             5%    FP085
+## 
+## 
+## Time: 0.4 secs</code></pre>
 </div>
 <div id="chapter-10-case-study-compressive-strength-of-concrete-mixtures" class="section level3">
 <h3>Chapter 10: Case Study: Compressive Strength of Concrete Mixtures</h3>
 <pre class="r"><code>rm(list = ls())
-#
-#</code></pre>
+library(AppliedPredictiveModeling)
+data(concrete)
+str(concrete)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1030 obs. of  9 variables:
+##  $ Cement             : num  540 540 332 332 199 ...
+##  $ BlastFurnaceSlag   : num  0 0 142 142 132 ...
+##  $ FlyAsh             : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Water              : num  162 162 228 228 192 228 228 228 228 228 ...
+##  $ Superplasticizer   : num  2.5 2.5 0 0 0 0 0 0 0 0 ...
+##  $ CoarseAggregate    : num  1040 1055 932 932 978 ...
+##  $ FineAggregate      : num  676 676 594 594 826 ...
+##  $ Age                : int  28 28 270 365 360 90 365 28 28 28 ...
+##  $ CompressiveStrength: num  80 61.9 40.3 41 44.3 ...</code></pre>
+<pre class="r"><code>str(mixtures)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1030 obs. of  9 variables:
+##  $ Cement             : num  0.2231 0.2217 0.1492 0.1492 0.0853 ...
+##  $ BlastFurnaceSlag   : num  0 0 0.0639 0.0639 0.0569 ...
+##  $ FlyAsh             : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Water              : num  0.0669 0.0665 0.1023 0.1023 0.0825 ...
+##  $ Superplasticizer   : num  0.00103 0.00103 0 0 0 ...
+##  $ CoarseAggregate    : num  0.43 0.433 0.418 0.418 0.42 ...
+##  $ FineAggregate      : num  0.279 0.278 0.266 0.266 0.355 ...
+##  $ Age                : int  28 28 270 365 360 90 365 28 28 28 ...
+##  $ CompressiveStrength: num  80 61.9 40.3 41 44.3 ...</code></pre>
+<pre class="r"><code># feature plot from caret
+library(caret)
+featurePlot(x = concrete[,-9],
+            y = concrete[,9],
+            between = list(x=1, y=1),  # space between panels
+            type = c(&quot;g&quot;, &quot;p&quot;, &quot;smooth&quot;))  # add background grid and smoother</code></pre>
+<p><img src="regression-models_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code># calc average for replicated mixtures
+library(plyr)
+averaged &lt;- ddply(mixtures,
+                  .(Cement, BlastFurnaceSlag, FlyAsh, Water,
+                    Superplasticizer, CoarseAggregate,
+                    FineAggregate, Age),
+                  function(x) c(CompressiveStrength =
+                                  mean(x$CompressiveStrength)))
+head(averaged)</code></pre>
+<pre><code>##       Cement BlastFurnaceSlag FlyAsh      Water Superplasticizer
+## 1 0.22309440       0.00000000      0 0.06692832      0.001032844
+## 2 0.22172039       0.00000000      0 0.06651612      0.001026483
+## 3 0.14917003       0.06393001      0 0.10228802      0.000000000
+## 4 0.14917003       0.06393001      0 0.10228802      0.000000000
+## 5 0.08534961       0.05689974      0 0.08251322      0.000000000
+## 6 0.12036199       0.05158371      0 0.10316742      0.000000000
+##   CoarseAggregate FineAggregate Age CompressiveStrength
+## 1       0.4296633     0.2792811  28               79.99
+## 2       0.4331759     0.2775611  28               61.89
+## 3       0.4181247     0.2664872 270               40.27
+## 4       0.4181247     0.2664872 365               41.05
+## 5       0.4204736     0.3547638 360               44.30
+## 6       0.4217195     0.3031674  90               47.03</code></pre>
+<pre class="r"><code># split data into training and test
+set.seed(975)
+forTraining &lt;- createDataPartition(averaged$CompressiveStrength,
+                                   p = 3/4)[[1]]
+trainingSet &lt;- averaged[forTraining,]
+testSet &lt;- averaged[-forTraining,]
+
+# (.)^2 takes all linear terms and all two-factor interactions
+modFormula &lt;- paste(&quot;CompressiveStrength ~ (.)^2 + I(Cement^2) + &quot;,
+                    &quot;I(BlastFurnaceSlag^2) + I(FlyAsh^2) + I(Water^2) +&quot;,
+                    &quot;I(Superplasticizer^2) + I(Age^2)&quot;)
+modFormula &lt;- as.formula(modFormula)
+controlObject &lt;- trainControl(method = &quot;repeatedcv&quot;,
+                              repeats = 5,
+                              number = 10)
+
+set.seed(669)
+linearReg &lt;- train(modFormula,
+                   data = trainingSet,
+                   method = &quot;lm&quot;,
+                   trControl = controlObject)
+linearReg</code></pre>
+<pre><code>## Linear Regression 
+## 
+## 745 samples
+##   8 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold, repeated 5 times) 
+## Summary of sample sizes: 669, 671, 670, 671, 670, 670, ... 
+## Resampling results:
+## 
+##   RMSE      Rsquared   MAE     
+##   7.793733  0.7729528  5.918212
+## 
+## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
+<pre class="r"><code>set.seed(669)
+plsModel &lt;- train(modFormula, data = trainingSet,
+                  method = &quot;pls&quot;,
+                  preProc = c(&quot;center&quot;, &quot;scale&quot;),
+                  tuneLength = 15,
+                  trControl = controlObject)
+plsModel</code></pre>
+<pre><code>## Partial Least Squares 
+## 
+## 745 samples
+##   8 predictor
+## 
+## Pre-processing: centered (42), scaled (42) 
+## Resampling: Cross-Validated (10 fold, repeated 5 times) 
+## Summary of sample sizes: 669, 671, 670, 671, 670, 670, ... 
+## Resampling results across tuning parameters:
+## 
+##   ncomp  RMSE       Rsquared   MAE     
+##    1     10.704021  0.5765400  8.517246
+##    2      9.812178  0.6425429  7.606679
+##    3      9.187612  0.6839415  7.201155
+##    4      8.809442  0.7084070  6.847143
+##    5      8.620088  0.7219521  6.683140
+##    6      8.523829  0.7291877  6.663404
+##    7      8.380743  0.7378897  6.498935
+##    8      8.166743  0.7513122  6.316288
+##    9      8.007674  0.7598027  6.103489
+##   10      7.878724  0.7677181  6.028908
+##   11      7.815858  0.7715853  5.936411
+##   12      7.803655  0.7723765  5.891998
+##   13      7.785938  0.7733984  5.873177
+##   14      7.796253  0.7728950  5.910784
+##   15      7.789112  0.7728680  5.911448
+## 
+## RMSE was used to select the optimal model using the smallest value.
+## The final value used for the model was ncomp = 13.</code></pre>
+<pre class="r"><code>enetGrid &lt;- expand.grid(.lambda = c(0, 0.001, 0.01, 0.1),
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(669)
+enetModel &lt;- train(modFormula, data = trainingSet,
+                   method = &quot;enet&quot;,
+                   preProc = c(&quot;center&quot;, &quot;scale&quot;),
+                   tuneGrid = enetGrid,
+                   trControl = controlObject)
+
+allResamples &lt;- resamples(list(&quot;Linear Reg&quot; = linearReg,
+                               &quot;PLS&quot; = plsModel,
+                               &quot;Elastic Net&quot; = enetModel))
+parallelplot(allResamples)</code></pre>
+<p><img src="regression-models_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
+<pre class="r"><code>parallelplot(allResamples, metric = &quot;Rsquared&quot;)</code></pre>
+<p><img src="regression-models_files/figure-html/unnamed-chunk-2-3.png" width="672" /></p>
 </div>
 </div>
 

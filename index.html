@@ -723,12 +723,237 @@ log(x), &amp; \lambda = 0 \end{matrix}\right.\]</span></p>
 </div>
 <div id="chapter-8-regression-trees-and-rule-based-models" class="section level3">
 <h3>Chapter 8: Regression Trees and Rule-Based Models</h3>
-</div>
-<div id="chapter-9-a-summary-of-solubility-models" class="section level3">
-<h3>Chapter 9: A Summary of Solubility Models</h3>
-</div>
-<div id="chapter-10-case-study-compressive-strength-of-concrete-mixtures" class="section level3">
-<h3>Chapter 10: Case Study: Compressive Strength of Concrete Mixtures</h3>
+<ul>
+<li>advantages
+<ul>
+<li>do not need as much pre-processing
+<ul>
+<li>can effectively handle predictors that are sparse, skewed, continuous, categorical, etc.</li>
+</ul></li>
+<li>do not need to specify model form</li>
+<li>can handle missing data</li>
+<li>implicitly conducts feature selection</li>
+<li>when tree is small, easy to interpret and compute</li>
+</ul></li>
+<li>disadvantages
+<ul>
+<li>model instability - slight changes in data can drastically change model so model is not as interpretable (for single trees)
+<ul>
+<li>strongly correlated vars are also an issue</li>
+</ul></li>
+<li>not optimal predictive performance bc of defined rectangular space</li>
+<li>finite terminal nodes results in finite predicted results</li>
+<li>predictors with more distinct values are implicitly favored (selection bias)</li>
+</ul></li>
+<li>ensemble models mitigate disadvantages</li>
+</ul>
+<p><strong>Basic Regression Trees</strong></p>
+<ul>
+<li>CART (classification and regression tree)
+<ul>
+<li>starts with entire data set, finds split for each predictor to minimize sum of squares error</li>
+<li>repeats for each split group</li>
+<li>also called recursive partitioning</li>
+<li>tree growing step happens until number of samples in the final splits fall below some threshold
+<ul>
+<li>missing data is ignored, surrogate splits are evaluated</li>
+</ul></li>
+<li>tree is then pruned back to a smaller depth
+<ul>
+<li>one method is cost-complexity tuning
+<ul>
+<li>finds tree with smallest error rate with penalization for number of nodes</li>
+<li>number of nodes is multiplied by complexity parameter
+<ul>
+<li>can select tuning parameter with cross validation and one-standard error rule</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>variable importance can be measured by keeping track of reduction of optimization criteria for each predictor</li>
+</ul></li>
+<li>GUIDE (generalized, unbiased, interaction detection and estimation)
+<ul>
+<li>addresses bias issue by decoupling predictor selection (uses hypotheses testing) and split value</li>
+</ul></li>
+<li>Conditional Inference Trees
+<ul>
+<li>addresses bias by using hypothesis testing for predection selection and determining split values</li>
+<li>uses 1 minus p-value as significance threshold
+<ul>
+<li>allows for comparison of predictors on different scales</li>
+<li>multiple comparison corrections can be applied to reduce bias and reduce false-positives from conduction a large number of hypothesis tests</li>
+</ul></li>
+<li>no need to prune bc more splits result in smaller samples and thus higher p-values</li>
+<li>p-val is not directly related to model performance so still need to choose tree based on performance</li>
+</ul></li>
+</ul>
+<p><strong>Regression Model Trees</strong></p>
+<ul>
+<li>terminal nodes can use a function besides average in group (models in the leaves)</li>
+<li>Weka package includes a “rational reconstruction” implementation of M5
+<ul>
+<li>initial split starts the same as simple regression tree
+<ul>
+<li>split is found through exhaustive search across all predictors and training samples, but expected reduction in node error rate is used (measures reduction in standard deviation)</li>
+</ul></li>
+<li>linear model is fit within partition using the split variable (and preceding ones) to minimize error instead of SD</li>
+<li>repeat tree growing process until error rate does not improve or not enough samples to continue
+<ul>
+<li>fully grown tree will have a linear model for every node</li>
+</ul></li>
+<li>prune tree using adjusted error rate
+<ul>
+<li>observed vs predicted error is multiplied by penalty <span class="math inline">\((n^{*}+p)/(n^{*}-p)\)</span>
+<ul>
+<li><span class="math inline">\(n^{*}\)</span> is number of training set data points used in linear model</li>
+<li><span class="math inline">\(p\)</span> is number of parameters</li>
+</ul></li>
+</ul></li>
+<li>smoothing or recursive shrinking metho is used when predicting new samples
+<ul>
+<li>linear models along path are combined from the bottom up
+<ul>
+<li>child model prediction is weighted using training sample size and parent uses a default weighting of 15</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>collinearity can still lead to model instability, smoothing helps, but removing correlated vars can have a measurable drop in performance</li>
+</ul>
+<p><strong>Rule-Based Models</strong></p>
+<ul>
+<li>a rule is a distinct path through a tree (all the way to the end)</li>
+<li>number of samples affected by a rule is called its coverage</li>
+<li>nodes can be redundancies (same split used in different places)</li>
+<li>separate and conquer strategy creates many trees (unsmoothed) and keeps rule with largest coverage, then repeats process on samples that are not in coverage area until all samples are covered</li>
+</ul>
+<p><strong>Bagged Trees</strong></p>
+<ul>
+<li>bagging, short for bootstrap aggregation, is a general approach that uses bootstrapping with regression/classification models to construct an ensemble
+<ul>
+<li>generate m bootstrapped samples of original training data to train unpruned trees of set max depth</li>
+<li>individual m model predictions are averaged to give the bagged model prediction</li>
+<li>often see exponential decrease in prediction improvement from increasing m
+<ul>
+<li>most improvement is seen from small number of trees (m&lt;10)</li>
+<li>if performance is still not good at m=50, should try a different method (random forest, boosting)</li>
+</ul></li>
+</ul></li>
+<li>advantages of bagged models
+<ul>
+<li>reduces prediction variance through aggregation process (more important for unstable models)
+<ul>
+<li>changing the sequence of bootstrapped samples should not result in a significantly different end prediction</li>
+</ul></li>
+<li>better prediction accuracy (related to predictions being more stable), esp for trees
+<ul>
+<li>bagging stable, low variance models (linear regression, MARS) will result is smaller accuracy improvements</li>
+</ul></li>
+<li>provides internal estimate of predictive performance that correlates well with CV or test set estimates
+<ul>
+<li>because some (out-of-bag) samples are left out when constructing each tree, sort of like CV</li>
+<li>average of out-of-bag performance metrics (out-of-bag estimates) can be used to gauge ensemble performance</li>
+</ul></li>
+</ul></li>
+<li>disadvantages
+<ul>
+<li>computational costs and memory requirements (as m increases)
+<ul>
+<li>parallel computing can help with both computation time and memory (each tree is fit independently)</li>
+</ul></li>
+<li>much less interpretable than unbagged model
+<ul>
+<li>can’t obtain any convenient rules like from single tree</li>
+<li>can still get variable importance (see random forest section)</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Random Forests</strong></p>
+<ul>
+<li>bagged trees are not completely independent bc all predictors are used for each tree
+<ul>
+<li>if sample size is large enough, trees might not be that different (tree correlation)</li>
+<li>to reduce this correlation, randomness can be added by sampling top predictors</li>
+</ul></li>
+<li>algo for random forests
+<ul>
+<li>create m bootstrapped samples</li>
+<li>train tree on each sample
+<ul>
+<li>at each split randomly select k (or m_try) from the original predictors to evaluate for splits</li>
+</ul></li>
+<li>predictions are averages across trees</li>
+</ul></li>
+<li>m_try parameter
+<ul>
+<li>default m_try is recommended to be 1/3 of total predictors</li>
+<li>bc of computational intensity, recommend tuning grid to have 5 values of m_try evenly spaced between 2 and P (total)</li>
+</ul></li>
+<li>number of trees
+<ul>
+<li>rf is protected from overfitting so increasing trees just increases computation time</li>
+<li>recommend using at least 1000 trees, add more trees until CV performance levels off</li>
+</ul></li>
+<li>advantages
+<ul>
+<li>more efficient than bagging (bc a subset of predictors are evaluated for each tree), though more trees are required for rf than bagging</li>
+<li>computation can be parallel, so more efficient than boosting</li>
+<li>protected from overfitting</li>
+</ul></li>
+<li>disadvantages
+<ul>
+<li>rf can underfit when data is not noisy</li>
+<li>impossible to gain understading of relationship b/w predictors and response</li>
+</ul></li>
+<li>rf tuning parameters in practice usually does not have too much impact on performance</li>
+<li>using out of bag error rate for evaluation will drastic reduce time needed, compared to CV</li>
+<li>variable importance values
+<ul>
+<li>between predictor correlations can have significant impact on values
+<ul>
+<li>uninformative predictors with high correlation to informative predictors can have higher ranking</li>
+<li>dilution effect (including two important variables that are highly correlated will halve their importance)</li>
+</ul></li>
+<li>m_try parameter also has a serious effect on importance values</li>
+</ul></li>
+</ul>
+<p><strong>Boosting</strong></p>
+<ul>
+<li>gradient boosting machines (gbm): given a loss function (squared error) and weak learner (regression trees), find an additive model that minimizes loss function
+<ul>
+<li>initialize with best guess (mean of response), another model is fit to residuals, repeat until user specified number of iterations is hit</li>
+<li>trees make a great base learner bc
+<ul>
+<li>can be made weak learners by restricting depth</li>
+<li>can be additive</li>
+<li>can be generated quickly</li>
+</ul></li>
+<li>if trees are used, tuning parameters will be depth of tree (interaction depth) and number of iterations</li>
+</ul></li>
+<li>susceptible to overfitting by finding local optima instead of global best split, despit weak learner
+<ul>
+<li>remedy is to apply regularization (shrinkage) by only adding a fraction (learning rate <span class="math inline">\(\lambda\)</span>) of current predicted value
+<ul>
+<li>small learning rates increase computation time and memory demands</li>
+<li>usually use learning rate of 0.01 or 0.1</li>
+</ul></li>
+<li>can also add a bagging step by only using a random sample (bagging fraction) for each tree (stochastic gradient boosting)
+<ul>
+<li>increases accuracy and reduces computation time</li>
+<li>suggest default bagging fraction of 0.5, but this can also be tuned</li>
+</ul></li>
+</ul></li>
+<li>computation time for boosting is usually greater than rf bc it can’t be made into a parallel process (each tree depends on prior trees)</li>
+<li>variable importance value rankings can drop off more steeply than rf because of tree dependency (structure correlation can lead to same predictors being selected across trees)</li>
+</ul>
+<p><strong>Cubist</strong></p>
+<ul>
+<li>differs from previous models in three ways
+<ul>
+<li>technique used for linear model smoothing, creating rules, pruning</li>
+<li>optional boosting (committees)</li>
+<li>predictions can be adjusted using nearby training data</li>
+</ul></li>
+</ul>
 </div>
 </div>
 <div id="classification-models" class="section level2">

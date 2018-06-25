@@ -258,23 +258,153 @@ knnTune
 
 ```{r, message=FALSE, warning=FALSE}
 rm(list = ls())
-#
-#
+library(caret)
+library(Cubist)
+library(gbm)
+library(ipred)
+library(party)
+library(partykit)
+library(randomForest)
+library(rpart)
+library(RWeka)
+library(AppliedPredictiveModeling)
+data(solubility)
+trainingData <- solTrainXtrans
+trainingData$Solubility <- solTrainY
+
+### Single Trees ###
+
+# rpart uses CART
+set.seed(100)
+rpartTune <- train(solTrainXtrans, solTrainY,
+                   method = "rpart2",  # use rpart to tune over complexity parameter, rpart2 tune over maxdepth
+                   tuneLength = 10,
+                   trControl = trainControl(method= "cv"))
+plot(rpartTune)
+
+# ctree in party uses conditional inference
+# use ctree_control to tune parameters
+
+### Model Trees ###
+
+# use method = "M5" in caret or RWeka
+# set.seed(100)
+# m5Tune <- train(solTrainXtrans, solTrainY,
+#                 method = "M5",
+#                 trControl = trainControl(method = "cv"),
+#                 control =  Weka_control(M = 10))
+# plot(m5Tune)
+
+### Bagged Trees ###
+
+# ipred: bagging, ipredbagg
+# RWeka: Baggin
+# caret: method = bag
+# party: cforest set mtry equal to total number of predictors
+
+### Random Forest ###
+
+# randomForest
+# can't use with missing data
+rfModel <- randomForest(solTrainXtrans, solTrainY,
+                        importance = TRUE,
+                        ntrees = 1000)
+head(varImp(rfModel))  # caret wrapper for variable importance
+
+### Boosted Trees ###
+
+# gbm 
+gbmModel <- gbm.fit(solTrainXtrans, solTrainY, distribution = "gaussian")
+# use gaussian distribution for continuous response
+
+# tuning with caret
+# gbmGrid <- expand.grid(.interaction.depth = seq(1, 7, by = 2),
+#                        .n.trees = seq(100, 1000, by = 50),
+#                        .shrinkage = c(0.01, 0.1))  # need to add n.minobsinnode
+# set.seed(100)
+# gbmTune <- train(solTrainXtrans, solTrainY,
+#                  method = "gbm",
+#                  tuneGrid = gbmGrid,
+#                  verbose = FALSE)
+
+### Cubist ###
+
+cubistMod <- cubist(solTrainXtrans, solTrainY)
+# predict(cubistMod, solTestXtrans)  # use neighbors agument to pass 0-9 integer to adjust predictions
+summary(cubistMod)
 ```
 
-### Chapter 9: A Summary of Solubility Models
-
-```{r, message=FALSE, warning=FALSE}
-rm(list = ls())
-#
-#
-```
 
 ### Chapter 10: Case Study: Compressive Strength of Concrete Mixtures
 
 ```{r, message=FALSE, warning=FALSE}
 rm(list = ls())
-#
-#
+library(AppliedPredictiveModeling)
+data(concrete)
+str(concrete)
+str(mixtures)
+
+# feature plot from caret
+library(caret)
+featurePlot(x = concrete[,-9],
+            y = concrete[,9],
+            between = list(x=1, y=1),  # space between panels
+            type = c("g", "p", "smooth"))  # add background grid and smoother
+
+# calc average for replicated mixtures
+library(plyr)
+averaged <- ddply(mixtures,
+                  .(Cement, BlastFurnaceSlag, FlyAsh, Water,
+                    Superplasticizer, CoarseAggregate,
+                    FineAggregate, Age),
+                  function(x) c(CompressiveStrength =
+                                  mean(x$CompressiveStrength)))
+head(averaged)
+
+# split data into training and test
+set.seed(975)
+forTraining <- createDataPartition(averaged$CompressiveStrength,
+                                   p = 3/4)[[1]]
+trainingSet <- averaged[forTraining,]
+testSet <- averaged[-forTraining,]
+
+# (.)^2 takes all linear terms and all two-factor interactions
+modFormula <- paste("CompressiveStrength ~ (.)^2 + I(Cement^2) + ",
+                    "I(BlastFurnaceSlag^2) + I(FlyAsh^2) + I(Water^2) +",
+                    "I(Superplasticizer^2) + I(Age^2)")
+modFormula <- as.formula(modFormula)
+controlObject <- trainControl(method = "repeatedcv",
+                              repeats = 5,
+                              number = 10)
+
+set.seed(669)
+linearReg <- train(modFormula,
+                   data = trainingSet,
+                   method = "lm",
+                   trControl = controlObject)
+linearReg
+
+set.seed(669)
+plsModel <- train(modFormula, data = trainingSet,
+                  method = "pls",
+                  preProc = c("center", "scale"),
+                  tuneLength = 15,
+                  trControl = controlObject)
+plsModel
+
+enetGrid <- expand.grid(.lambda = c(0, 0.001, 0.01, 0.1),
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(669)
+enetModel <- train(modFormula, data = trainingSet,
+                   method = "enet",
+                   preProc = c("center", "scale"),
+                   tuneGrid = enetGrid,
+                   trControl = controlObject)
+
+allResamples <- resamples(list("Linear Reg" = linearReg,
+                               "PLS" = plsModel,
+                               "Elastic Net" = enetModel))
+parallelplot(allResamples)
+parallelplot(allResamples, metric = "Rsquared")
 ```
 
