@@ -13,15 +13,123 @@ knitr::opts_chunk$set(cache=TRUE)
 
 ```{r, warnings=FALSE, message=FALSE}
 rm(list = ls())
-#
-#
+library(AppliedPredictiveModeling)
+set.seed(975)
+simulatedTrain <- quadBoundaryFunc(500)
+simulatedTest <- quadBoundaryFunc(1000)
+head(simulatedTrain)
+
+library(randomForest)
+rfModel <- randomForest(class ~ X1 + X2,
+                        data = simulatedTrain,
+                        ntree = 2000)
+library(MASS)
+qdaModel <- qda(class ~ X1 + X2, data = simulatedTrain)  # quadratic discriminant model
+
+qdaTrainPred <- predict(qdaModel, simulatedTrain)
+names(qdaTrainPred)  # posterior contains class probs
+head(qdaTrainPred$class)
+head(qdaTrainPred$posterior)
+qdaTestPred <- predict(qdaModel, simulatedTest)
+simulatedTrain$QDAprob <- qdaTrainPred$posterior[,"Class1"]
+simulatedTest$QDAprob <- qdaTestPred$posterior[,"Class1"]
+
+rfTestPred <- predict(rfModel, simulatedTest, type = "prob")
+head(rfTestPred)
+simulatedTest$RFprob <- rfTestPred[,"Class1"]
+simulatedTest$RFclass <- predict(rfModel, simulatedTest)  # needs separate predict call
+
+### Sensitivity and Specificity ###
+
+library(caret)
+sensitivity(data = simulatedTest$RFclass,
+            reference = simulatedTest$class,
+            positive = "Class1")  # assume Class1 is the event of interest 
+specificity(data = simulatedTest$RFclass,
+            reference = simulatedTest$class,
+            positive = "Class2")  # assume Class2 is the non-event 
+posPredValue(data = simulatedTest$RFclass,
+             reference = simulatedTest$class,
+             positive = "Class1")  # PPV, prevalance computed from data
+negPredValue(data = simulatedTest$RFclass,
+             reference = simulatedTest$class,
+             positive = "Class2")  # NPV
+posPredValue(data = simulatedTest$RFclass,
+             reference = simulatedTest$class,
+             positive = "Class1",
+             prevalence = 0.9)  # PPV, manually set prevalence
+
+### Confusion Matrix ###
+
+# from caret package
+# calculated on a 1vAll basis if more than two classes
+confusionMatrix(data = simulatedTest$RFclass,
+                reference = simulatedTest$class,
+                positive = "Class1")  # PPV, prevalance computed from data) 
+
+### ROC Curves ###
+
+library(pROC)
+rocCurve <- roc(response = simulatedTest$class,
+                predictor = simulatedTest$RFprob,
+                levels = rev(levels(simulatedTest$class)))  # defaults assumes second class is event, need to reverse
+auc(rocCurve)
+ci.auc(rocCurve)
+plot(rocCurve, legacy.axes = TRUE)  # legacy axes sets x axis from 0 to 1
+
+### Lift Charts ###
+
+# use lift function from caret packages
+labs <- c(RFprob = "Random Forest",
+          QDAprob = "Quadratic Disriminant Analysis")
+liftCurve <- lift(class ~ RFprob + QDAprob, data = simulatedTest, labels = labs)
+liftCurve  # can add more models to right side of formula too
+xyplot(liftCurve, 
+       auto.key = list(columns = 2, lines = TRUE, points = FALSE))  # lattice plot
+
+### Calibrating Probabilities ###
+
+# calibration.plot from PresenceAbsence package
+library(PresenceAbsence)
+
+# calibration from caret package
+calCurve <- calibration(class ~ RFprob + QDAprob, data = simulatedTest)  # syntax similar to lift
+calCurve
+xyplot(calCurve, auto.key = list(columns = 2))
+
+# use glm sigmoid to calibrate probs
+# glm models second level factor, so need to relevel
+sigmoidalCal <- glm(relevel(class, ref = "Class2") ~ QDAprob, 
+                    data = simulatedTrain,
+                    family = binomial)  # select binomial for discrete outcomes
+coef(summary(sigmoidalCal))
+sigmoidProbs <- predict(sigmoidalCal,
+                        newdata = simulatedTest[, "QDAprob", drop = FALSE],
+                        type = "response")
+simulatedTest$QDAsigmoid <- sigmoidProbs
+head(simulatedTest)
+
+# bayesian calibration
+
+library(klaR)
+BayesCal <- NaiveBayes(class ~ QDAprob, data = simulatedTrain,
+                       usekernal = TRUE)
+BayesProbs <- predict(BayesCal,
+                      newdata = simulatedTest[, "QDAprob", drop = FALSE])
+simulatedTest$QDABayes <- BayesProbs$posterior[,"Class1"]
+head(simulatedTest[, c(5,6,8,9)])
+calCurve2 <- calibration(class ~ QDAprob + QDABayes + QDAsigmoid, 
+                         data = simulatedTest)
+xyplot(calCurve2)
 ```
+
 
 ### Chapter 12: Discriminant Analysis and Other Linear Classification Models
 
 ```{r, warnings=FALSE, message=FALSE}
-rm(list = ls())
-#
+#rm(list = ls())
+
+
 #
 ```
 

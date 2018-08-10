@@ -460,7 +460,67 @@ __Cubist__
 
 ### Chapter 11: Measuring Performance in Classification Models
 
+__Class Predictions__
 
+* most classification models generate predicted class probs
+    * probably estimate of classes can suggest confidence
+    * neural nets and PLS do not generate probabilities (not b/w 0 and 1, or sum to 1)
+        * can transform predictions into probability-like values (e.g. softmax transformation)
+* calibration plot can assess quality of class probs (obs vs pred probabilities)
+    * x = midpoint of predicted bin
+    * y = observed
+    * want line to be 45 degrees
+    * bayes rules and sigmoidal approach can be used to calibrate
+* plotting true outcome against probability can also be used for calibration
+    * for two classes, histograms can be uniform or skewed
+    * for three or more classes, can use heat map
+* equivocal (or indeterminate) zones are set to ignore predictions on the border of classes
+    * equivocal rate should be reported along with performance of samples outside of the equivocal zone
+
+__Evaluating Predicted Classes__
+
+* confusion matrix is commonly used to measure performance
+* simplest metric is overall accuracy
+    * most straightforward, but has disadvantages
+        * does not distinguish type of error
+            * not all errors are equal
+        * not great for data with severely imbalanced classes
+* kappa statistic (or cohen's kappa) accounts for accuracy generated from chance
+    * $Kappa = \frac{O-E}{1-E}$
+    * O is observed accuracy
+    * E is expected accuracy
+    * takes values from -1 to 1, think of like correlation
+    * when there are more than two classes and there is a natural ordering to the classes, weighted kappa can be used to penalize errors further from true result
+* two class problems
+    * sensitivity = true positive / positives = true positive rate
+    * specificity = true negatives / negatives
+    * false positive rate = 1 - specificity
+    * holding accuracy constant, there is usually a tradeoff between sensitivity and specificity
+        * ROC (receiver operating characteristic) curve helps evaluate the tradeoffs
+        * a single measure can be used J = sensitivity + specificity - 1
+    * unconditional rates can be calculated as:
+        * PPV (positive prevalance value)
+        * NPV (negative prevalance value)
+        * prevalance is the frequency of event, but hard to quantify and can vary across predictors (and can also be dynamic, i.e. amount of spam changes based on algos)
+* besides accuracy, models can have other primary goals
+    * reduce cost, improve custumer satisfaction
+    * probability cost function (PCF) accounts for different costs and expected class frequencies
+        * calculates portion of cost associated with fast positives
+        * normalized expected cost $NEC = PCF \times (1-TP) + (1-PCF) \times FP$
+        
+__Evaluating Class Probabilities__
+
+* ROC curves plot sensitivity against 1-specificity
+    * created by evaluating class probs against different thresholds
+    * better models will maximize AUC
+    * pro: insensitive to class imbalances
+    * con: only defined for two class problems and obscures information
+        * model that maximizes area may not be best for area of interest
+* lift charts
+    * data vis tool for assessing model predictions
+    * ranked predictions are compared against actual
+    * higher slope = more lift = better model
+    
 
 ### Chapter 12: Discriminant Analysis and Other Linear Classification Models
 

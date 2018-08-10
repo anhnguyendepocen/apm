@@ -960,6 +960,101 @@ log(x), &amp; \lambda = 0 \end{matrix}\right.\]</span></p>
 <h2>Classification Models</h2>
 <div id="chapter-11-measuring-performance-in-classification-models" class="section level3">
 <h3>Chapter 11: Measuring Performance in Classification Models</h3>
+<p><strong>Class Predictions</strong></p>
+<ul>
+<li>most classification models generate predicted class probs
+<ul>
+<li>probably estimate of classes can suggest confidence</li>
+<li>neural nets and PLS do not generate probabilities (not b/w 0 and 1, or sum to 1)
+<ul>
+<li>can transform predictions into probability-like values (e.g. softmax transformation)</li>
+</ul></li>
+</ul></li>
+<li>calibration plot can assess quality of class probs (obs vs pred probabilities)
+<ul>
+<li>x = midpoint of predicted bin</li>
+<li>y = observed</li>
+<li>want line to be 45 degrees</li>
+<li>bayes rules and sigmoidal approach can be used to calibrate</li>
+</ul></li>
+<li>plotting true outcome against probability can also be used for calibration
+<ul>
+<li>for two classes, histograms can be uniform or skewed</li>
+<li>for three or more classes, can use heat map</li>
+</ul></li>
+<li>equivocal (or indeterminate) zones are set to ignore predictions on the border of classes
+<ul>
+<li>equivocal rate should be reported along with performance of samples outside of the equivocal zone</li>
+</ul></li>
+</ul>
+<p><strong>Evaluating Predicted Classes</strong></p>
+<ul>
+<li>confusion matrix is commonly used to measure performance</li>
+<li>simplest metric is overall accuracy
+<ul>
+<li>most straightforward, but has disadvantages
+<ul>
+<li>does not distinguish type of error
+<ul>
+<li>not all errors are equal</li>
+</ul></li>
+<li>not great for data with severely imbalanced classes</li>
+</ul></li>
+</ul></li>
+<li>kappa statistic (or cohen’s kappa) accounts for accuracy generated from chance
+<ul>
+<li><span class="math inline">\(Kappa = \frac{O-E}{1-E}\)</span></li>
+<li>O is observed accuracy</li>
+<li>E is expected accuracy</li>
+<li>takes values from -1 to 1, think of like correlation</li>
+<li>when there are more than two classes and there is a natural ordering to the classes, weighted kappa can be used to penalize errors further from true result</li>
+</ul></li>
+<li>two class problems
+<ul>
+<li>sensitivity = true positive / positives = true positive rate</li>
+<li>specificity = true negatives / negatives</li>
+<li>false positive rate = 1 - specificity</li>
+<li>holding accuracy constant, there is usually a tradeoff between sensitivity and specificity
+<ul>
+<li>ROC (receiver operating characteristic) curve helps evaluate the tradeoffs</li>
+<li>a single measure can be used J = sensitivity + specificity - 1</li>
+</ul></li>
+<li>unconditional rates can be calculated as:
+<ul>
+<li>PPV (positive prevalance value)</li>
+<li>NPV (negative prevalance value)</li>
+<li>prevalance is the frequency of event, but hard to quantify and can vary across predictors (and can also be dynamic, i.e. amount of spam changes based on algos)</li>
+</ul></li>
+</ul></li>
+<li>besides accuracy, models can have other primary goals
+<ul>
+<li>reduce cost, improve custumer satisfaction</li>
+<li>probability cost function (PCF) accounts for different costs and expected class frequencies
+<ul>
+<li>calculates portion of cost associated with fast positives</li>
+<li>normalized expected cost <span class="math inline">\(NEC = PCF \times (1-TP) + (1-PCF) \times FP\)</span></li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Evaluating Class Probabilities</strong></p>
+<ul>
+<li>ROC curves plot sensitivity against 1-specificity
+<ul>
+<li>created by evaluating class probs against different thresholds</li>
+<li>better models will maximize AUC</li>
+<li>pro: insensitive to class imbalances</li>
+<li>con: only defined for two class problems and obscures information
+<ul>
+<li>model that maximizes area may not be best for area of interest</li>
+</ul></li>
+</ul></li>
+<li>lift charts
+<ul>
+<li>data vis tool for assessing model predictions</li>
+<li>ranked predictions are compared against actual</li>
+<li>higher slope = more lift = better model</li>
+</ul></li>
+</ul>
 </div>
 <div id="chapter-12-discriminant-analysis-and-other-linear-classification-models" class="section level3">
 <h3>Chapter 12: Discriminant Analysis and Other Linear Classification Models</h3>
